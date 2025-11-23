@@ -323,6 +323,7 @@ const LARGE_DICTIONARY = [
   "puzzle",
   "pyjama",
   "quilt",
+  "rabbit",
   "radio",
   "raincoat",
   "rake",
