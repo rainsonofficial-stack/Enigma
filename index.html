@@ -130,11 +130,11 @@
             pointer-events: auto;
         }
 
-        /* 🥇 Discreet Reveal Area: Lower Right (Final Position) */
+        /* Discreet Reveal Area: Lower Right (Fixed Position) */
         #reveal-area {
             position: absolute;
-            bottom: 4%; /* More flexible positioning */
-            right: 2%; /* More flexible positioning */
+            bottom: 4%; 
+            right: 2%; 
             font-size: 11px;
             color: rgba(0, 0, 0, 0.8); 
             background: rgba(255, 255, 255, 0.7); 
@@ -391,7 +391,7 @@
             DB_VERSION: 1,
             STORE_NAME: 'dictionary',
             CONFIG_KEY: 'app_config',
-            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON"], // 50 default words
+            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON"], 
             VOWELS: ['A', 'E', 'I', 'O', 'U'],
             PASSCODE: '',
             MATCHES: [],
@@ -407,20 +407,84 @@
                 3: new Set(['C', 'O', 'S'])
             },
 
-            // --- IndexedDB Management (simplified for brevity) ---
-            openDB() { /* ... */ return Promise.resolve(); },
-            async loadConfig() { /* ... */ },
-            async saveConfig() { /* ... */ },
-            async loadDictionary() { 
-                this.CURRENT_DICTIONARY = this.defaultDictionary;
-                return Promise.resolve(); 
+            // --- IndexedDB Management ---
+            openDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+                            db.createObjectStore(this.STORE_NAME);
+                        }
+                    };
+                    request.onsuccess = (event) => { resolve(event.target.result); };
+                    request.onerror = (event) => { reject(event.target.error); };
+                });
             },
-            async saveDictionary(dict) { 
-                this.CURRENT_DICTIONARY = dict;
-                return Promise.resolve(); 
+
+            async loadConfig() {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    const request = store.get(this.CONFIG_KEY);
+                    request.onsuccess = (event) => {
+                        const storedConfig = event.target.result;
+                        if (storedConfig) {
+                            this.CONFIG = {...this.CONFIG, ...storedConfig};
+                        }
+                        resolve();
+                    };
+                    request.onerror = () => resolve(); 
+                });
             },
-            
-            // --- Helper Functions ---
+
+            async saveConfig() {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    store.put(this.CONFIG, this.CONFIG_KEY);
+                    transaction.oncomplete = resolve;
+                    transaction.onerror = (e) => { resolve(); };
+                });
+            },
+
+            async loadDictionary() {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    const request = store.get('word_list');
+                    request.onsuccess = (event) => {
+                        this.CURRENT_DICTIONARY = event.target.result || this.defaultDictionary;
+                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
+                        resolve();
+                    };
+                    request.onerror = () => {
+                        this.CURRENT_DICTIONARY = this.defaultDictionary;
+                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length} (Default)`;
+                        resolve();
+                    };
+                });
+            },
+
+            async saveDictionary(dict) {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    store.put(dict, 'word_list');
+                    transaction.oncomplete = () => {
+                        this.CURRENT_DICTIONARY = dict;
+                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
+                        resolve();
+                    };
+                    transaction.onerror = (e) => { resolve(); };
+                });
+            },
+
+            // --- Vowel & Word Helper Functions ---
             isVowel(char) {
                 const upper = char.toUpperCase();
                 return this.VOWELS.includes(upper) || (this.CONFIG.isYVowel && upper === 'Y');
@@ -430,7 +494,7 @@
                 const indices = [];
                 for (let i = 0; i < word.length; i++) {
                     if (this.isVowel(word[i])) {
-                        indices.push(i + 1); 
+                        indices.push(i + 1); // 1-based position
                     }
                 }
                 return indices;
@@ -484,25 +548,199 @@
                     return true;
                 });
             },
+
+            // --- Disambiguation Logic ---
+            getDisambiguationIndex(matches) {
+                if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
+
+                const maxLength = Math.max(...matches.map(w => w.length));
+                let bestIndex = -1;
+                
+                for (let i = 1; i < maxLength; i++) { 
+                    const lettersAtPosition = matches.map(word => word.length > i ? word[i] : null).filter(l => l !== null);
+                    if (lettersAtPosition.length === 0) continue;
+
+                    const uniqueLetters = new Set(lettersAtPosition);
+
+                    if (uniqueLetters.size === lettersAtPosition.length) {
+                        return { 
+                            index: i + 1, 
+                            letters: Array.from(uniqueLetters).sort(), 
+                            type: 'unique' 
+                        };
+                    }
+
+                    if (uniqueLetters.size > 1 && bestIndex === -1) {
+                        bestIndex = i + 1;
+                    }
+                }
+
+                if (bestIndex !== -1) {
+                    const fallbackLetters = matches.map(word => word.length >= bestIndex ? word[bestIndex - 1] : null).filter(l => l !== null);
+                    return { 
+                        index: bestIndex, 
+                        letters: Array.from(new Set(fallbackLetters)).sort(), 
+                        type: 'fallback' 
+                    };
+                }
+
+                return { index: -1, letters: [], type: 'unique' };
+            },
+
+
+            // --- UI/State Update Functions ---
+            updateTime() {
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                const date = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                document.getElementById('lock-time').textContent = time.replace(/\s(A|P)M/, '');
+                document.getElementById('home-time').textContent = time;
+                document.getElementById('lock-date').textContent = date;
+            },
+
+            updatePasscodeDots() {
+                document.querySelectorAll('.passcode-dot').forEach((dot, index) => {
+                    dot.classList.toggle('active', index < this.PASSCODE.length);
+                });
+            },
+
+            revealWord(word) {
+                document.getElementById('reveal-area').textContent = `ID: ${word}`;
+                this.hideDisambiguationUI();
+            },
+
+            hideDiscreetReveal() {
+                document.getElementById('reveal-area').textContent = 'NO MATCH';
+                this.hideDisambiguationUI();
+            },
+
+            showDisambiguationUI(matches) {
+                this.MATCHES = matches;
+                const disambUI = document.getElementById('disambiguation-ui');
+                const disambContent = document.getElementById('disamb-content');
+                const disambResult = this.getDisambiguationIndex(matches);
+                const { index, letters, type } = disambResult;
+
+                disambContent.innerHTML = '';
+
+                if (index === -1) {
+                    this.revealWord('ERROR: AMBIGUOUS');
+                    disambUI.classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('disamb-header').textContent = `Clue: Letter at position ${index}`;
+                disambUI.classList.remove('hidden');
+                disambUI.classList.add('active');
+
+
+                if (type === 'unique') {
+                    const chipContainer = document.createElement('div');
+                    chipContainer.classList.add('chip-container');
+                    letters.forEach(letter => {
+                        const chip = document.createElement('div');
+                        chip.classList.add('letter-chip');
+                        chip.textContent = letter;
+                        chip.addEventListener('click', () => this.handleChipClick(letter, index));
+                        chipContainer.appendChild(chip);
+                    });
+                    disambContent.appendChild(chipContainer);
+                } else {
+                    const fallbackInput = document.createElement('div');
+                    fallbackInput.classList.add('fallback-input');
+                    fallbackInput.innerHTML = `
+                        <span>Type the letter:</span>
+                        <input type="text" id="disamb-input" maxlength="1" autocapitalize="characters" placeholder="L" />
+                    `;
+                    disambContent.appendChild(fallbackInput);
+
+                    const input = document.getElementById('disamb-input');
+                    input.focus();
+                    input.addEventListener('input', (e) => {
+                        const char = e.target.value.toUpperCase();
+                        if (char.length === 1 && char.match(/[A-Z]/)) {
+                            this.handleFallbackInput(char, index);
+                        } else if (char.length === 0) {
+                            document.getElementById('no-match-msg').style.display = 'none';
+                        }
+                    });
+                }
+            },
+
+            hideDisambiguationUI() {
+                const disambUI = document.getElementById('disambiguation-ui');
+                disambUI.classList.add('hidden');
+                disambUI.classList.remove('active');
+            },
             
-            // --- Disambiguation Logic (simplified for brevity) ---
-            getDisambiguationIndex(matches) { /* ... */ return { index: -1, letters: [], type: 'unique' }; },
-            showDisambiguationUI(matches) { /* ... */ },
-            hideDisambiguationUI() { /* ... */ },
-            handleChipClick(letter, index) { /* ... */ },
-            handleFallbackInput(letter, index) { /* ... */ },
+            // --- Disambiguation Actions ---
+            handleChipClick(letter, index) {
+                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
+                if (filtered.length === 1) {
+                    this.revealWord(filtered[0]);
+                } else {
+                    this.showDisambiguationUI(filtered); 
+                }
+            },
 
+            handleFallbackInput(letter, index) {
+                document.getElementById('no-match-msg').style.display = 'none';
+                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
 
-            // --- UI/State & Flow Functions (simplified for brevity) ---
-            updateTime() { /* ... */ },
-            updatePasscodeDots() { /* ... */ },
-            revealWord(word) { document.getElementById('reveal-area').textContent = `ID: ${word}`; this.hideDisambiguationUI(); },
-            hideDiscreetReveal() { document.getElementById('reveal-area').textContent = 'NO MATCH'; this.hideDisambiguationUI(); },
-            handlePasscode(digit) { /* ... */ },
-            unlock() { /* ... */ },
+                if (filtered.length === 0) {
+                    document.getElementById('no-match-msg').style.display = 'block';
+                } else if (filtered.length === 1) {
+                    this.revealWord(filtered[0]);
+                } else {
+                    this.showDisambiguationUI(filtered);
+                }
+            },
 
+            // --- Lock/Unlock Flow (Passcode Logic) ---
+            async handlePasscode(digit) {
+                if (digit === 'del') {
+                    this.PASSCODE = this.PASSCODE.slice(0, -1);
+                } else if (this.PASSCODE.length < 6) {
+                    this.PASSCODE += digit;
+                }
 
-            // --- Settings Logic (FIXED LONG PRESS) ---
+                this.updatePasscodeDots();
+
+                if (this.PASSCODE.length === 6) {
+                    await new Promise(r => setTimeout(r, 200)); 
+                    this.unlock();
+                }
+            },
+
+            async unlock() {
+                const lockscreen = document.getElementById('lockscreen');
+                const homeScreen = document.getElementById('home-screen');
+
+                this.MATCHES = this.filterDictionary(this.PASSCODE);
+
+                if (this.MATCHES.length === 1) {
+                    this.revealWord(this.MATCHES[0]);
+                } else if (this.MATCHES.length > 1) {
+                    this.showDisambiguationUI(this.MATCHES);
+                } else {
+                    this.hideDiscreetReveal();
+                }
+
+                lockscreen.style.transition = 'opacity 0.5s';
+                lockscreen.style.opacity = '0';
+                
+                await new Promise(r => setTimeout(r, 500));
+                
+                lockscreen.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+                homeScreen.classList.add('active');
+                
+                this.PASSCODE = '';
+                this.updatePasscodeDots();
+            },
+
+            // --- Settings Logic (Fixed Long Press) ---
             setupSettings() {
                 const timeArea = document.getElementById('home-time');
                 const settingsOverlay = document.getElementById('settings-overlay');
@@ -518,8 +756,8 @@
 
                 const startPress = (e) => {
                     if (e.type === 'touchstart') e.preventDefault(); 
-                    if (pressTimer === null) { // Only start timer if not already running
-                        pressTimer = setTimeout(openSettings, 3000); // 3 seconds
+                    if (pressTimer === null) { 
+                        pressTimer = setTimeout(openSettings, 3000); 
                     }
                 };
 
@@ -542,7 +780,66 @@
                     settingsOverlay.style.display = 'none';
                 });
                 
-                // --- File and Toggle Handlers (simplified for brevity) ---
+                // Wallpaper Upload
+                document.getElementById('bg-upload').addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const dataURL = e.target.result;
+                            document.getElementById('app').style.backgroundImage = `url('${dataURL}')`;
+                            this.CONFIG.wallpaper = dataURL;
+                            this.saveConfig();
+                            document.getElementById('bg-status').textContent = 'Screenshot uploaded successfully.';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // Dictionary Upload
+                document.getElementById('dictionary-upload').addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            try {
+                                const dict = JSON.parse(e.target.result).map(word => word.toUpperCase());
+                                await this.saveDictionary(dict);
+                                alert(`Dictionary updated with ${dict.length} words.`);
+                            } catch (error) {
+                                alert("Error parsing JSON dictionary. Please ensure it is a valid JSON array of strings.");
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                });
+                
+                // Export Dictionary
+                document.getElementById('export-dictionary').addEventListener('click', () => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.CURRENT_DICTIONARY, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "magician_dictionary.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                });
+
+                // Reset Dictionary
+                document.getElementById('reset-dictionary').addEventListener('click', async () => {
+                    if (confirm("Are you sure you want to reset the dictionary to the default word list?")) {
+                        await this.saveDictionary(this.defaultDictionary);
+                        alert("Dictionary reset to default.");
+                    }
+                });
+
+                // 'Y' as Vowel Toggle
+                const yToggle = document.getElementById('vowel-y-toggle');
+                yToggle.checked = this.CONFIG.isYVowel;
+                yToggle.addEventListener('change', () => {
+                    this.CONFIG.isYVowel = yToggle.checked;
+                    this.saveConfig();
+                });
             },
 
             // --- Initialization ---
@@ -550,12 +847,7 @@
                 // Register Service Worker for PWA/Offline
                 if ('serviceWorker' in navigator) {
                     try {
-                        const registration = await navigator.serviceWorker.register('sw.js');
-                        // Force a reload if a new service worker is active (for first-time fullscreen mode)
-                        if (registration.installing || registration.waiting) {
-                           console.log('SW registering. Reloading for fullscreen.');
-                           // Add logic to check for worker state and trigger reload here if necessary
-                        }
+                        await navigator.serviceWorker.register('sw.js');
                     } catch (error) {
                         console.error('Service Worker registration failed:', error);
                     }
@@ -564,11 +856,16 @@
                 await this.loadConfig();
                 await this.loadDictionary();
 
-                // Apply config (simplified for brevity)
-                // ...
+                if (this.CONFIG.wallpaper) {
+                    document.getElementById('app').style.backgroundImage = `url('${this.CONFIG.wallpaper}')`;
+                    document.getElementById('bg-status').textContent = 'Screenshot loaded.';
+                }
 
-                // Setup UI Handlers (simplified for brevity)
-                // ...
+                document.querySelectorAll('.keypad-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        this.handlePasscode(button.getAttribute('data-key'));
+                    });
+                });
                 
                 this.updateTime();
                 setInterval(() => this.updateTime(), 1000); 
