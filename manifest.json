@@ -1,8 +1,8 @@
 {
-  "name": "OS Lockscreen PRO",       
-  "short_name": "Unlock PRO",        
+  "name": "OS Lockscreen PRO",
+  "short_name": "Unlock PRO",
   "start_url": "./index.html", 
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
