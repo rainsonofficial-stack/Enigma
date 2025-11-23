@@ -357,6 +357,7 @@ const LARGE_DICTIONARY = [
   "skillet",
   "skirt",
   "sled",
+  "sledgehammer",
   "slippers",
   "slipper",
   "smartphone",
