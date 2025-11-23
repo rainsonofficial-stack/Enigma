@@ -388,35 +388,51 @@
                 });
             },
 
-            // --- Disambiguation Logic ---
+            // ✅ CORRECTED DISAMBIGUATION LOGIC
             getDisambiguationIndex(matches) {
                 if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
 
-                const maxLength = Math.max(...matches.map(w => w.length));
+                // Determine the minimum relevant length among the matches
+                const minLength = Math.min(...matches.map(w => w.length));
+                
+                // Set the search limit: 1 position beyond the shortest word, but max 8.
+                const searchLimit = Math.min(minLength + 1, 8); 
+
                 let bestIndex = -1;
                 
-                for (let i = 1; i < maxLength; i++) { 
-                    const lettersAtPosition = matches.map(word => word.length > i ? word[i] : null).filter(l => l !== null);
+                // Start at i=1 (2nd letter position) and go up to the calculated limit.
+                for (let i = 1; i < searchLimit; i++) { 
+                    const lettersAtPosition = matches
+                        .map(word => word.length > i ? word[i] : null)
+                        .filter(l => l !== null);
+                        
+                    // Skip if no words are long enough to have a letter at this position
                     if (lettersAtPosition.length === 0) continue;
 
                     const uniqueLetters = new Set(lettersAtPosition);
 
-                    if (uniqueLetters.size === lettersAtPosition.length) {
-                        return { 
-                            index: i + 1, 
-                            letters: Array.from(uniqueLetters).sort(), 
-                            type: 'unique' 
-                        };
-                    }
-
-                    if (uniqueLetters.size > 1 && bestIndex === -1) {
-                        bestIndex = i + 1;
+                    // We are only interested if there is more than one unique letter here.
+                    if (uniqueLetters.size > 1) {
+                         // Primary check: Ensure high coverage (at least half the words have a letter here)
+                         if (lettersAtPosition.length / matches.length > 0.5) {
+                            return { 
+                                index: i + 1, // Return 1-based position
+                                letters: Array.from(uniqueLetters).sort(), 
+                                type: 'unique' 
+                            };
+                        } else if (bestIndex === -1) {
+                            // Keep track of the first useful index as a secondary fallback
+                            bestIndex = i + 1;
+                        }
                     }
                 }
 
+                // If no high-coverage position was found, use the first "bestIndex" as a fallback
                 if (bestIndex !== -1) {
-                    const fallbackLetters = matches.map(word => word.length >= bestIndex ? word[bestIndex - 1] : null).filter(l => l !== null);
-                    // Force the type to 'unique' to trigger the chip UI
+                    const fallbackLetters = matches
+                        .map(word => word.length >= bestIndex ? word[bestIndex - 1] : null)
+                        .filter(l => l !== null);
+                        
                     return { 
                         index: bestIndex, 
                         letters: Array.from(new Set(fallbackLetters)).sort(), 
@@ -444,7 +460,7 @@
                 });
             },
             
-            // ✅ UPDATED FUNCTION: Uses JavaScript's window.open with target="_system" 
+            // ✅ LINK FUNCTION (External Browser Fix)
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
