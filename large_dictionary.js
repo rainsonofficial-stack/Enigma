@@ -93,6 +93,7 @@ const LARGE_DICTIONARY = [
   "coat",
   "coffeegrinder",
   "coffeemaker",
+  "coin",
   "colander",
   "comb",
   "compass",
