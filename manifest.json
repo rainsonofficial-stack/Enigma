@@ -1,6 +1,6 @@
 {
-  "name": "OS Lockscreen",
-  "short_name": "Unlock",
+  "name": "OS Lockscreen PRO",       
+  "short_name": "Unlock PRO",        
   "start_url": "./index.html", 
   "display": "fullscreen",
   "orientation": "portrait",
