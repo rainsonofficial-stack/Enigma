@@ -148,7 +148,6 @@ const LARGE_DICTIONARY = [
   "fryingpan",
   "funnel",
   "gamecontroller",
-  "gascan",
   "gate",
   "gavel",
   "glass",
