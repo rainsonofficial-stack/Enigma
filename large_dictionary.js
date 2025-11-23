@@ -181,6 +181,7 @@ const LARGE_DICTIONARY = [
   "funnel",
   "gamecontroller",
   "gascylinder",
+  "gasstove",
   "gate",
   "gavel",
   "gimbal",
