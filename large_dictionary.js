@@ -132,6 +132,7 @@ const LARGE_DICTIONARY = [
   "diamonds", // spectator-spellable phrase kept short
   "diamond",
   "diary",
+  "dinosaur",
   "dishrack",
   "dishtowel",
   "dishwasher",
