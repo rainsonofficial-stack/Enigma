@@ -332,6 +332,7 @@ const LARGE_DICTIONARY = [
   "router",
   "rubberband",
   "rubickscube",
+  "rubikscube",
   "rug",
   "ruler",
   "safetycone",
