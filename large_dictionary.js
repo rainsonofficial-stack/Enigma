@@ -289,6 +289,7 @@ const LARGE_DICTIONARY = [
   "mousepad",
   "mug",
   "napkin",
+  "nail",
   "nailcutter",
   "nailpolish",
   "neckband",
