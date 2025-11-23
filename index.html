@@ -153,7 +153,7 @@
             max-width: 96%;
             overflow-y: auto; 
             z-index: 100;
-            pointer-events: none;
+            pointer-events: none; /* Pointer events are handled by the anchor tags inside */
             text-align: right; 
         }
         
@@ -169,7 +169,15 @@
             letter-spacing: 1px;
             font-weight: 700;
             white-space: nowrap;
+            /* Make the link behave like the old span */
+            text-decoration: none; 
+            cursor: pointer; /* Ensure cursor shows it's clickable */
+            pointer-events: auto; /* Re-enable pointer events for the link */
         }
+        .option-word:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
 
         /* Disambiguation Area (Clue Widget) */
         #disambiguation-ui {
@@ -436,6 +444,7 @@
                 });
             },
             
+            // 🔥🔥🔥 MODIFIED FUNCTION FOR CLICKABLE WORDS (Google Search) 🔥🔥🔥
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -444,13 +453,25 @@
                 
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
-                        const wordElement = document.createElement('span');
-                        wordElement.classList.add('option-word');
-                        wordElement.textContent = word;
-                        listContainer.appendChild(wordElement);
+                        const wordLink = document.createElement('a'); // Use <a> tag
+                        wordLink.classList.add('option-word');
+                        wordLink.textContent = word;
+                        
+                        // Set attributes for standard browser behavior and new tab/window
+                        wordLink.setAttribute('href', `https://www.google.com/search?q=${word}`);
+                        wordLink.setAttribute('target', '_blank');
+
+                        // Add the click event listener to open the search
+                        wordLink.addEventListener('click', (e) => {
+                            e.preventDefault(); 
+                            window.open(`https://www.google.com/search?q=${word}`, '_blank');
+                        });
+                        
+                        listContainer.appendChild(wordLink);
                     });
                 }
             },
+            // 🔥🔥🔥 END OF MODIFIED FUNCTION 🔥🔥🔥
 
             updateOptionsDisplay(matches) {
                 if ((!matches || matches.length === 0) && this.PASSCODE.length === 6) {
@@ -465,7 +486,7 @@
                     
                 } else if (matches.length === 1) {
                     this.MATCHES = matches;
-                    document.getElementById('options-list').innerHTML = `<span class="option-word">ID: ${matches[0]}</span>`;
+                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="https://www.google.com/search?q=${matches[0]}" target="_blank">ID: ${matches[0]}</a>`;
                     this.hideDisambiguationUI();
 
                 } else {
@@ -486,7 +507,7 @@
 
                 if (index === -1) {
                     this.updateOptionsList(matches);
-                    document.getElementById('options-list').innerHTML += `<span class="option-word" style="background: #ff3b30;">ERROR: AMBIGUOUS</span>`;
+                    document.getElementById('options-list').innerHTML += `<a class="option-word" style="pointer-events: auto; background: #ff3b30;">ERROR: AMBIGUOUS</a>`;
                     this.hideDisambiguationUI();
                     return;
                 }
