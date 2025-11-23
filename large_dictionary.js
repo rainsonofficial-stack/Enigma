@@ -103,6 +103,8 @@ const LARGE_DICTIONARY = [
   "chocolate",
   "chopstick",
   "choppingboard",
+  "cigar",
+  "cigarette",
   "clock",
   "closet",
   "cloth",
