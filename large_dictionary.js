@@ -246,6 +246,7 @@ const LARGE_DICTIONARY = [
   "paperweight",
   "parrottoy",
   "passport",
+  "pavement",
   "peanut",
   "peeler",
   "pen",
