@@ -78,18 +78,39 @@
             display: flex;
             gap: 15px;
             margin-bottom: 50px;
+            transition: transform 0.1s; /* Ensure smooth transition before shake */
         }
         .passcode-dot {
             width: 12px;
             height: 12px;
             border: 2px solid rgba(255, 255, 255, 0.6);
             border-radius: 50%;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, border-color 0.2s;
         }
         .passcode-dot.active {
             background-color: white;
             border-color: white;
         }
+
+        /* --- Passcode Error Shake Animation (NEW) --- */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        /* Apply the shake to the passcode display container */
+        .passcode-display.error {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        /* Add temporary visual feedback (e.g., changing dot color) */
+        .passcode-display.error .passcode-dot {
+            border-color: #ff3b30; /* Red border */
+            background-color: transparent !important;
+        }
+        /* --- END NEW CSS --- */
+
 
         .keypad {
             display: grid;
@@ -388,7 +409,7 @@
                 });
             },
 
-            // ✅ CORRECTED DISAMBIGUATION LOGIC
+            // --- Disambiguation Logic ---
             getDisambiguationIndex(matches) {
                 if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
 
@@ -460,7 +481,7 @@
                 });
             },
             
-            // ✅ LINK FUNCTION (External Browser Fix)
+            // Link function remains the same (External Browser Fix)
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -491,7 +512,12 @@
             },
 
             updateOptionsDisplay(matches) {
+                // NOTE: This function is only called on UNLOCK when matches > 0 or < 6 digits were entered.
+                // The 6-digit zero-match case is handled by unlock/handlePasscodeError now.
+
                 if ((!matches || matches.length === 0) && this.PASSCODE.length === 6) {
+                    // This block should technically never run if unlock() is working correctly, 
+                    // but we keep the output here just in case.
                     this.MATCHES = [];
                     document.getElementById('options-list').innerHTML = `<span class="option-word" style="background: #ff3b30;">NO MATCHES FOUND</span>`;
                     this.hideDisambiguationUI();
@@ -503,7 +529,7 @@
                     
                 } else if (matches.length === 1) {
                     this.MATCHES = matches;
-                    // ✅ UPDATED: Use inline onclick and '_system' target for single match display
+                    // UPDATED: Use inline onclick and '_system' target for single match display
                     const word = matches[0];
                     document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" onclick="window.open('https://www.google.com/search?q=${word}', '_system'); return false;" href="#">ID: ${word}</a>`;
                     this.hideDisambiguationUI();
@@ -563,26 +589,36 @@
             },
 
             // --- Lock/Unlock Flow (Passcode Logic) ---
-            async handlePasscode(digit) {
-                if (digit === 'del') {
-                    this.PASSCODE = this.PASSCODE.slice(0, -1);
-                } else if (this.PASSCODE.length < 6) {
-                    this.PASSCODE += digit;
-                }
-
+            
+            // NEW: Error Handler for shake animation
+            async handlePasscodeError() {
+                const display = document.querySelector('.passcode-display');
+                
+                // 1. Add error class to trigger shake animation
+                display.classList.add('error');
+                
+                // 2. Wait for the shake to finish
+                await new Promise(r => setTimeout(r, 350));
+                
+                // 3. Reset the UI: remove error class, clear dots, clear passcode
+                display.classList.remove('error');
+                this.PASSCODE = '';
                 this.updatePasscodeDots();
-
-                if (this.PASSCODE.length === 6) {
-                    await new Promise(r => setTimeout(r, 200)); 
-                    this.unlock();
-                }
             },
 
             async unlock() {
+                const matches = this.filterDictionary(this.PASSCODE);
+                
+                if (matches.length === 0) {
+                    // NEW: If no words match the 6-digit code, show the error and return.
+                    await this.handlePasscodeError();
+                    return; 
+                }
+                
+                // --- Proceed with successful unlock ---
                 const lockscreen = document.getElementById('lockscreen');
                 const homeScreen = document.getElementById('home-screen');
 
-                const matches = this.filterDictionary(this.PASSCODE);
                 this.updateOptionsDisplay(matches); 
                 
                 lockscreen.style.transition = 'opacity 0.5s';
@@ -596,6 +632,21 @@
                 
                 this.PASSCODE = '';
                 this.updatePasscodeDots();
+            },
+
+            async handlePasscode(digit) {
+                if (digit === 'del') {
+                    this.PASSCODE = this.PASSCODE.slice(0, -1);
+                } else if (this.PASSCODE.length < 6) {
+                    this.PASSCODE += digit;
+                }
+
+                this.updatePasscodeDots();
+
+                if (this.PASSCODE.length === 6) {
+                    await new Promise(r => setTimeout(r, 200)); 
+                    this.unlock();
+                }
             },
 
             // --- Initialization ---
