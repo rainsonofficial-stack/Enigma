@@ -1,6 +1,7 @@
 const LARGE_DICTIONARY = [
   "airconditioner",
   "aircooler",
+  "airgun",
   "airpump",
   "alarmclock",
   "album",
@@ -216,6 +217,7 @@ const LARGE_DICTIONARY = [
   "lotion",
   "luggage",
   "lunchbox",
+  "machinegun",
   "magazine",
   "magnifyingglass",
   "marker",
