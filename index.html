@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>OS | Lockscreen</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* General Reset & Body */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+        }
+
+        /* App Container (Simulates Phone Screen) */
+        #app {
+            width: 100%;
+            height: 100%;
+            max-width: 600px; /* Optional: to simulate a phone size on desktop */
+            max-height: 100vh;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.3s ease-in-out;
+            color: white;
+            z-index: 10;
+        }
+
+        /* --- Lockscreen UI --- */
+        #lockscreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 50px;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+        .hidden { display: none !important; }
+
+        .time-display {
+            font-size: 80px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            user-select: none;
+            cursor: pointer; /* For long-press trigger */
+        }
+        .date-display {
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 50px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Passcode & Keypad */
+        .passcode-display {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        .passcode-dot {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        .passcode-dot.active {
+            background-color: white;
+            border-color: white;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .keypad-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 28px;
+            font-weight: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+        .keypad-button:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .keypad-button.alt-text {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: -15px;
+        }
+        .keypad-row {
+            display: contents;
+        }
+
+        /* --- Home Screen UI --- */
+        #home-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #home-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Discreet Reveal Area (Top Left Corner) */
+        #reveal-area {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4); /* Low Contrast */
+            z-index: 100;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        /* Disambiguation Area (Notification/Widget Style) */
+        #disambiguation-ui {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            background: rgba(45, 45, 45, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 99;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #disambiguation-ui.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #disambiguation-ui h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #ccc;
+        }
+        
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .letter-chip {
+            padding: 8px 12px;
+            background-color: #007aff; /* iOS Blue */
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+        .letter-chip:hover {
+            background-color: #005bb5;
+        }
+
+        .fallback-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fallback-input input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 20px;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+        }
+        #no-match-msg {
+            font-size: 12px;
+            color: #ff3b30; /* iOS Red */
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* --- Hidden Settings UI --- */
+        #settings-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-direction: column;
+            align-items: center;
+        }
+        #settings-overlay h2 { color: white; margin-bottom: 20px; }
+        .setting-group {
+            background: #2c2c2e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 90%;
+            max-width: 400px;
+            color: white;
+        }
+        .setting-group label { display: block; margin-bottom: 10px; font-weight: 500; }
+        .setting-group input[type="file"], .setting-group button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 5px;
+            width: 100%;
+        }
+        #close-settings {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Default Background (will be replaced by user image) */
+        #app:not([style*="background-image"]) {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><rect width="100" height="100" fill="%231a1a2e"/><g fill="none" stroke="%23303960" stroke-width="0.5"><path d="M 0 50 L 100 50 M 50 0 L 50 100"/><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="30"/></g><text x="50" y="50" font-family="Arial" font-size="5" fill="%23ff7a70" text-anchor="middle" dominant-baseline="middle">Default Wallpaper</text></svg>');
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="lockscreen">
+            <div class="time-display" id="lock-time"></div>
+            <div class="date-display" id="lock-date"></div>
+
+            <div class="passcode-display">
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+            </div>
+
+            <div class="keypad">
+                <div class="keypad-row">
+                    <button class="keypad-button" data-key="1">1</button>
+                    <button class="keypad-button" data-key="2">2</button>
+                    <button class="keypad-button" data-key="3">3</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="keypad-button" data-key="4">4</button>
+                    <button class="keypad-button" data-key="5">5</button>
+                    <button class="keypad-button" data-key="6">6</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="keypad-button" data-key="7">7</button>
+                    <button class="keypad-button" data-key="8">8</button>
+                    <button class="keypad-button" data-key="9">9</button>
+                </div>
+                <div class="keypad-row">
+                    <div class="keypad-button" style="background: none;"></div>
+                    <button class="keypad-button" data-key="0">0</button>
+                    <button class="keypad-button" data-key="del">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="home-screen" class="hidden">
+            <div id="reveal-area">NO MATCH</div>
+            
+            <div id="disambiguation-ui" class="hidden">
+                <h4 id="disamb-header"></h4>
+                <div id="disamb-content">
+                    </div>
+                <div id="no-match-msg">No word matches that letter. Try another.</div>
+            </div>
+
+            <div style="position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; font-size: 15px; font-weight: 600; z-index: 101;">
+                <span id="home-time" style="cursor: pointer;">8:00 AM</span> <span style="display: flex; gap: 5px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2zM17 10v4M12 10v4M7 10v4"></path></svg>
+                </span>
+            </div>
+
+        </div>
+
+        <div id="settings-overlay" class="hidden">
+            <button id="close-settings">&times;</button>
+            <h2>Magician Settings</h2>
+            <p style="color: #ccc; font-size: 12px; margin-bottom: 20px;">All data is stored locally on this device for offline use.</p>
+
+            <div class="setting-group">
+                <label>1. Upload Dictionary JSON (e.g., ["BOTTLE","KETTLE"])</label>
+                <input type="file" id="dictionary-upload" accept=".json">
+                <p id="dict-status" style="font-size: 12px; margin-top: 10px; color: #81b214;">Current words: 0</p>
+                <button id="export-dictionary">Export Current Dictionary</button>
+                <button id="reset-dictionary" style="background: #ff3b30;">Reset Dictionary to Default</button>
+            </div>
+
+            <div class="setting-group">
+                <label>2. Upload Homescreen Screenshot</label>
+                <input type="file" id="bg-upload" accept="image/*">
+                <p id="bg-status" style="font-size: 12px; margin-top: 10px; color: #81b214;"></p>
+            </div>
+
+            <div class="setting-group">
+                <label>3. Advanced Options</label>
+                <input type="checkbox" id="vowel-y-toggle">
+                <label for="vowel-y-toggle" style="display: inline-block; margin-left: 5px;">Treat 'Y' as a vowel</label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Application Logic ---
+
+        const APP = {
+            DB_NAME: 'MagicianAppDB',
+            DB_VERSION: 1,
+            STORE_NAME: 'dictionary',
+            CONFIG_KEY: 'app_config',
+            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON"], // 50 words for default
+            VOWELS: ['A', 'E', 'I', 'O', 'U'],
+            PASSCODE: '',
+            MATCHES: [],
+            CURRENT_DICTIONARY: [],
+            CONFIG: {
+                isYVowel: false,
+                wallpaper: null
+            },
+            VOWEL_POSITIONS: [], // For tracking the actual vowel indices of the last single match
+
+            // Passcode Decoder & Filter Rules
+            LETTER_SHAPES: {
+                // 1 = straight-only: A,E,F,H,I,K,L,M,N,T,V,W,X,Y,Z
+                1: new Set(['A', 'E', 'F', 'H', 'I', 'K', 'L', 'M', 'N', 'T', 'V', 'W', 'X', 'Y', 'Z']),
+                // 2 = mixed straight + curves: B,D,G,J,P,Q,R,U
+                2: new Set(['B', 'D', 'G', 'J', 'P', 'Q', 'R', 'U']),
+                // 3 = curved-only: C,O,S
+                3: new Set(['C', 'O', 'S'])
+            },
+
+            // --- IndexedDB Management ---
+            openDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+                            db.createObjectStore(this.STORE_NAME);
+                        }
+                    };
+
+                    request.onsuccess = (event) => {
+                        resolve(event.target.result);
+                    };
+
+                    request.onerror = (event) => {
+                        console.error("IndexedDB error:", event.target.error);
+                        reject(event.target.error);
+                    };
+                });
+            },
+
+            async loadConfig() {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    const request = store.get(this.CONFIG_KEY);
+
+                    request.onsuccess = (event) => {
+                        const storedConfig = event.target.result;
+                        if (storedConfig) {
+                            this.CONFIG = {...this.CONFIG, ...storedConfig};
+                        }
+                        resolve();
+                    };
+                    request.onerror = () => resolve(); // Fail silently
+                });
+            },
+
+            async saveConfig() {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    store.put(this.CONFIG, this.CONFIG_KEY);
+                    transaction.oncomplete = resolve;
+                    transaction.onerror = (e) => { console.error("Save config error:", e.target.error); resolve(); };
+                });
+            },
+
+            async loadDictionary() {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    const request = store.get('word_list');
+
+                    request.onsuccess = (event) => {
+                        this.CURRENT_DICTIONARY = event.target.result || this.defaultDictionary;
+                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
+                        resolve();
+                    };
+                    request.onerror = () => {
+                        this.CURRENT_DICTIONARY = this.defaultDictionary;
+                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length} (Default)`;
+                        resolve();
+                    };
+                });
+            },
+
+            async saveDictionary(dict) {
+                const db = await this.openDB();
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([this.STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    store.put(dict, 'word_list');
+                    transaction.oncomplete = () => {
+                        this.CURRENT_DICTIONARY = dict;
+                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
+                        resolve();
+                    };
+                    transaction.onerror = (e) => { console.error("Save dict error:", e.target.error); resolve(); };
+                });
+            },
+
+            // --- Vowel & Word Helper Functions ---
+            isVowel(char) {
+                const upper = char.toUpperCase();
+                return this.VOWELS.includes(upper) || (this.CONFIG.isYVowel && upper === 'Y');
+            },
+
+            getVowelIndices(word) {
+                const indices = [];
+                for (let i = 0; i < word.length; i++) {
+                    if (this.isVowel(word[i])) {
+                        indices.push(i + 1); // 1-based position
+                    }
+                }
+                return indices;
+            },
+
+            // --- The Core Matching Algorithm ---
+            filterDictionary(passcode, currentMatches = null) {
+                // Ensure all words are uppercase for matching consistency
+                const dictionary = (currentMatches || this.CURRENT_DICTIONARY).map(w => w.toUpperCase());
+                if (dictionary.length === 0) return [];
+                
+                const [d1, d2, d3, d4, d5, d6] = passcode.split('').map(Number);
+
+                const lenA = d1;
+                const lenB = d1 + 10;
+                
+                const filtered = dictionary.filter(word => {
+                    const length = word.length;
+                    
+                    // --- Digit 1: Word Length (d or d+10) ---
+                    // Magician should avoid >19 letter words unless d1=0 is extended for >19 later.
+                    if (length !== lenA && length !== lenB) {
+                        return false;
+                    }
+
+                    const vIndices = this.getVowelIndices(word);
+                    const vowelCount = vIndices.length;
+
+                    // --- Digit 2: 1st Vowel Position (d2 > 0) ---
+                    // d2 must be 1-9. word[v1-1] must be a vowel.
+                    if (d2 > 0 && (vowelCount < 1 || vIndices[0] !== d2)) {
+                        return false;
+                    }
+
+                    // --- Digit 3: 2nd Vowel Position (single-digit only) ---
+                    if (d3 === 0) {
+                        // 0 -> exactly one vowel total.
+                        if (vowelCount !== 1) {
+                            return false;
+                        }
+                    } else if (d3 > 0) {
+                        // >0 -> 2nd vowel must be at position d3.
+                        if (vowelCount < 2 || vIndices[1] !== d3) {
+                            return false;
+                        }
+                    }
+
+                    // --- Digit 4: 3rd Vowel Position (wildcard when 0) ---
+                    if (d4 > 0) {
+                        // >0 -> 3rd vowel must be at position d4.
+                        if (vowelCount < 3 || vIndices[2] !== d4) {
+                            return false;
+                        }
+                    }
+
+                    // --- Digit 5: 4th Vowel Position (wildcard when 0) ---
+                    if (d5 > 0) {
+                        // >0 -> 4th vowel must be at position d5.
+                        if (vowelCount < 4 || vIndices[3] !== d5) {
+                            return false;
+                        }
+                    }
+
+                    // --- Digit 6: First Letter Shape ---
+                    if (d6 > 0) {
+                        const firstLetter = word[0];
+                        const shapeSet = this.LETTER_SHAPES[d6];
+                        if (!shapeSet || !shapeSet.has(firstLetter)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                return filtered;
+            },
+
+            // --- Disambiguation Logic (for multiple matches) ---
+            getDisambiguationIndex(matches) {
+                if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
+
+                const maxLength = Math.max(...matches.map(w => w.length));
+                let bestIndex = -1;
+                let bestType = 'fallback'; // 'unique' or 'fallback'
+                
+                // Start from index 1 (2nd letter, since 1st letter is constrained by d6)
+                for (let i = 1; i < maxLength; i++) { 
+                    const lettersAtPosition = matches.map(word => word.length > i ? word[i] : null).filter(l => l !== null);
+                    
+                    if (lettersAtPosition.length === 0) continue; // Skip if all words are shorter
+
+                    const uniqueLetters = new Set(lettersAtPosition);
+
+                    if (uniqueLetters.size === lettersAtPosition.length) {
+                        // Full uniqueness found (every candidate has a different letter at this position)
+                        return { 
+                            index: i + 1, // 1-based index
+                            letters: Array.from(uniqueLetters).sort(), 
+                            type: 'unique' 
+                        };
+                    }
+
+                    if (uniqueLetters.size > 1 && bestIndex === -1) {
+                        // Found first index where at least two letters differ (fallback)
+                        bestIndex = i + 1; // 1-based index
+                        bestType = 'fallback';
+                    }
+                }
+
+                // Return the fallback index if a unique one wasn't found
+                if (bestIndex !== -1) {
+                    const fallbackLetters = matches.map(word => word.length >= bestIndex ? word[bestIndex - 1] : null).filter(l => l !== null);
+                    return { 
+                        index: bestIndex, 
+                        letters: Array.from(new Set(fallbackLetters)).sort(), 
+                        type: 'fallback' 
+                    };
+                }
+
+                return { index: -1, letters: [], type: 'unique' }; // Should not happen with >1 match
+            },
+
+
+            // --- UI/State Update Functions ---
+            updateTime() {
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                const date = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                const timeElement = document.getElementById('lock-time');
+                const homeTimeElement = document.getElementById('home-time');
+                if (timeElement) timeElement.textContent = time.replace(/\s(A|P)M/, ''); // Remove AM/PM for "lockscreen" style
+                if (homeTimeElement) homeTimeElement.textContent = time;
+                document.getElementById('lock-date').textContent = date;
+            },
+
+            updatePasscodeDots() {
+                const dots = document.querySelectorAll('.passcode-dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index < this.PASSCODE.length);
+                });
+            },
+
+            revealWord(word) {
+                document.getElementById('reveal-area').textContent = `ID: ${word}`;
+                this.hideDisambiguationUI();
+            },
+
+            hideDiscreetReveal() {
+                document.getElementById('reveal-area').textContent = 'NO MATCH';
+                this.hideDisambiguationUI();
+            },
+
+            showDisambiguationUI(matches) {
+                this.MATCHES = matches;
+                const disambUI = document.getElementById('disambiguation-ui');
+                const disambContent = document.getElementById('disamb-content');
+                const disambResult = this.getDisambiguationIndex(matches);
+                const { index, letters, type } = disambResult;
+
+                disambContent.innerHTML = ''; // Clear previous content
+
+                if (index === -1) {
+                    // Should be one match, but defensively show no match if logic fails
+                    this.revealWord('ERROR: AMBIGUOUS');
+                    disambUI.classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('disamb-header').textContent = `Clue: Letter at position ${index}`;
+                disambUI.classList.remove('hidden');
+                disambUI.classList.add('active');
+
+
+                if (type === 'unique') {
+                    // Fully unique letters at index: show clickable chips
+                    const chipContainer = document.createElement('div');
+                    chipContainer.classList.add('chip-container');
+                    letters.forEach(letter => {
+                        const chip = document.createElement('div');
+                        chip.classList.add('letter-chip');
+                        chip.textContent = letter;
+                        chip.addEventListener('click', () => this.handleChipClick(letter, index));
+                        chipContainer.appendChild(chip);
+                    });
+                    disambContent.appendChild(chipContainer);
+                } else {
+                    // Fallback: show single-letter input
+                    const fallbackInput = document.createElement('div');
+                    fallbackInput.classList.add('fallback-input');
+                    fallbackInput.innerHTML = `
+                        <span>Type the letter:</span>
+                        <input type="text" id="disamb-input" maxlength="1" autocapitalize="characters" placeholder="L" />
+                    `;
+                    disambContent.appendChild(fallbackInput);
+
+                    const input = document.getElementById('disamb-input');
+                    input.focus();
+                    input.addEventListener('input', (e) => {
+                        const char = e.target.value.toUpperCase();
+                        if (char.length === 1 && char.match(/[A-Z]/)) {
+                            this.handleFallbackInput(char, index);
+                        } else if (char.length === 0) {
+                            document.getElementById('no-match-msg').style.display = 'none';
+                        }
+                    });
+                }
+            },
+
+            hideDisambiguationUI() {
+                const disambUI = document.getElementById('disambiguation-ui');
+                disambUI.classList.add('hidden');
+                disambUI.classList.remove('active');
+            },
+            
+            // --- Disambiguation Actions ---
+            handleChipClick(letter, index) {
+                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
+                if (filtered.length === 1) {
+                    this.revealWord(filtered[0]);
+                } else {
+                    // Safety net: should be 1 if 'unique' logic is correct
+                    this.revealWord(`ERROR: ${filtered.length} MATCHES`);
+                }
+            },
+
+            handleFallbackInput(letter, index) {
+                document.getElementById('no-match-msg').style.display = 'none';
+                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
+
+                if (filtered.length === 0) {
+                    document.getElementById('no-match-msg').style.display = 'block';
+                } else if (filtered.length === 1) {
+                    this.revealWord(filtered[0]);
+                } else {
+                    // Re-filter and re-compute disambiguation UI
+                    this.showDisambiguationUI(filtered);
+                }
+            },
+
+            // --- Lock/Unlock Flow ---
+            async handlePasscode(digit) {
+                if (digit === 'del') {
+                    this.PASSCODE = this.PASSCODE.slice(0, -1);
+                } else if (this.PASSCODE.length < 6) {
+                    this.PASSCODE += digit;
+                }
+
+                this.updatePasscodeDots();
+
+                if (this.PASSCODE.length === 6) {
+                    // Delay for visual effect
+                    await new Promise(r => setTimeout(r, 200)); 
+                    this.unlock();
+                }
+            },
+
+            async unlock() {
+                const lockscreen = document.getElementById('lockscreen');
+                const homeScreen = document.getElementById('home-screen');
+
+                // 1. Process the passcode
+                this.MATCHES = this.filterDictionary(this.PASSCODE);
+
+                if (this.MATCHES.length === 1) {
+                    this.revealWord(this.MATCHES[0]);
+                } else if (this.MATCHES.length > 1) {
+                    this.showDisambiguationUI(this.MATCHES);
+                    this.hideDiscreetReveal();
+                } else {
+                    this.hideDiscreetReveal(); // Show NO MATCH
+                }
+
+                // 2. Animate unlock
+                lockscreen.style.transition = 'opacity 0.5s';
+                lockscreen.style.opacity = '0';
+                
+                await new Promise(r => setTimeout(r, 500));
+                
+                lockscreen.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+                homeScreen.classList.add('active');
+                
+                // Clear passcode for next lock
+                this.PASSCODE = '';
+                this.updatePasscodeDots();
+            },
+
+            // --- Settings Logic ---
+            setupSettings() {
+                const timeArea = document.getElementById('home-time');
+                let pressTimer;
+
+                // Long-press detection on Time
+                timeArea.addEventListener('mousedown', () => {
+                    pressTimer = setTimeout(() => {
+                        document.getElementById('settings-overlay').style.display = 'flex';
+                    }, 3000); // 3 seconds
+                });
+                timeArea.addEventListener('mouseup', () => clearTimeout(pressTimer));
+                timeArea.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+                timeArea.addEventListener('touchstart', () => {
+                    pressTimer = setTimeout(() => {
+                        document.getElementById('settings-overlay').style.display = 'flex';
+                    }, 3000);
+                });
+                timeArea.addEventListener('touchend', () => clearTimeout(pressTimer));
+                timeArea.addEventListener('touchcancel', () => clearTimeout(pressTimer));
+
+                document.getElementById('close-settings').addEventListener('click', () => {
+                    document.getElementById('settings-overlay').style.display = 'none';
+                });
+                
+                // Wallpaper Upload
+                document.getElementById('bg-upload').addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const dataURL = e.target.result;
+                            document.getElementById('app').style.backgroundImage = `url('${dataURL}')`;
+                            this.CONFIG.wallpaper = dataURL;
+                            this.saveConfig();
+                            document.getElementById('bg-status').textContent = 'Screenshot uploaded successfully.';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // Dictionary Upload
+                document.getElementById('dictionary-upload').addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            try {
+                                const dict = JSON.parse(e.target.result).map(word => word.toUpperCase());
+                                await this.saveDictionary(dict);
+                                alert(`Dictionary updated with ${dict.length} words.`);
+                            } catch (error) {
+                                alert("Error parsing JSON dictionary. Please ensure it is a valid JSON array of strings.");
+                                console.error(error);
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                });
+                
+                // Export Dictionary
+                document.getElementById('export-dictionary').addEventListener('click', () => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.CURRENT_DICTIONARY, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "magician_dictionary.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                });
+
+                // Reset Dictionary
+                document.getElementById('reset-dictionary').addEventListener('click', async () => {
+                    if (confirm("Are you sure you want to reset the dictionary to the default word list?")) {
+                        await this.saveDictionary(this.defaultDictionary);
+                        alert("Dictionary reset to default.");
+                    }
+                });
+
+                // 'Y' as Vowel Toggle
+                const yToggle = document.getElementById('vowel-y-toggle');
+                yToggle.checked = this.CONFIG.isYVowel;
+                yToggle.addEventListener('change', () => {
+                    this.CONFIG.isYVowel = yToggle.checked;
+                    this.saveConfig();
+                });
+            },
+
+            // --- Initialization ---
+            async init() {
+                // Register Service Worker for PWA/Offline
+                if ('serviceWorker' in navigator) {
+                    try {
+                        await navigator.serviceWorker.register('sw.js');
+                        console.log('Service Worker registered.');
+                    } catch (error) {
+                        console.error('Service Worker registration failed:', error);
+                    }
+                }
+                
+                // Load config and dictionary
+                await this.loadConfig();
+                await this.loadDictionary();
+
+                // Apply config
+                if (this.CONFIG.wallpaper) {
+                    document.getElementById('app').style.backgroundImage = `url('${this.CONFIG.wallpaper}')`;
+                }
+                document.getElementById('vowel-y-toggle').checked = this.CONFIG.isYVowel;
+
+                // Setup UI Handlers
+                document.querySelectorAll('.keypad-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const key = button.getAttribute('data-key');
+                        this.handlePasscode(key);
+                    });
+                });
+                
+                // Initial updates
+                this.updateTime();
+                setInterval(() => this.updateTime(), 1000); // Update time every second
+
+                this.setupSettings();
+            }
+        };
+
+        // Initialize the application
+        APP.init();
+    </script>
+</body>
+</html>
