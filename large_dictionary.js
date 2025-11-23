@@ -171,6 +171,7 @@ const LARGE_DICTIONARY = [
   "filingcabinet",
   "filter",
   "firetruck",
+  "fireplace",
   "firstaidkit",
   "flag",
   "flashlight",
