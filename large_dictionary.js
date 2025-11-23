@@ -100,6 +100,7 @@ const LARGE_DICTIONARY = [
   "couch",
   "cushion",
   "cup",
+  "cupboard",
   "cutlery",
   "curtain",
   "cuttingboard",
