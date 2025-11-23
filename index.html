@@ -7,22 +7,25 @@
     <link rel="manifest" href="manifest.json">
     <style>
         /* General Reset & Body */
+        html { 
+            height: 100%; /* Fix PWA height bug */
+        }
         body {
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
+            overflow: hidden; /* Prevent scrolling */
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: 100%; /* Fix PWA height bug */
             background: #000;
         }
 
         /* App Container (Simulates Phone Screen) */
         #app {
             width: 100%;
-            height: 100%;
+            height: 100%; 
             max-width: 600px;
             max-height: 100vh;
             position: relative;
@@ -31,6 +34,8 @@
             transition: all 0.3s ease-in-out;
             color: white;
             z-index: 10;
+            /* HARDCODED BACKGROUND IMAGE */
+            background-image: url('home.jpg'); 
         }
 
         /* --- Lockscreen UI --- */
@@ -40,7 +45,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            /* Semi-transparent blur on top of home.jpg */
+            background: rgba(0, 0, 0, 0.7); 
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -235,60 +241,6 @@
             margin-top: 5px;
             display: none;
         }
-
-        /* --- Hidden Settings UI --- */
-        #settings-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
-            display: none;
-            padding: 20px;
-            box-sizing: border-box;
-            flex-direction: column;
-            align-items: center;
-            overflow-y: auto;
-        }
-        #settings-overlay h2 { color: white; margin-bottom: 20px; }
-        .setting-group {
-            background: #2c2c2e;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            width: 90%;
-            max-width: 400px;
-            color: white;
-        }
-        .setting-group label { display: block; margin-bottom: 10px; font-weight: 500; }
-        .setting-group input[type="file"], .setting-group button {
-            background: #007aff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 5px;
-            width: 100%;
-            font-size: 14px;
-        }
-        #close-settings {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        /* Default Background */
-        #app:not([style*="background-image"]) {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><rect width="100" height="100" fill="%231a1a2e"/><g fill="none" stroke="%23303960" stroke-width="0.5"><path d="M 0 50 L 100 50 M 50 0 L 50 100"/><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="30"/></g><text x="50" y="50" font-family="Arial" font-size="5" fill="%23ff7a70" text-anchor="middle" dominant-baseline="middle">Default Wallpaper</text></svg>');
-        }
     </style>
 </head>
 <body>
@@ -344,7 +296,7 @@
             </div>
 
             <div class="status-bar">
-                <span id="home-time" style="cursor: pointer; user-select: none;">8:00 AM</span> 
+                <span id="home-time">8:00 AM</span> 
                 <span style="display: flex; gap: 5px;">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2zM17 10v4M12 10v4M7 10v4"></path></svg>
@@ -352,54 +304,19 @@
             </div>
 
         </div>
-
-        <div id="settings-overlay" class="hidden">
-            <button id="close-settings">&times;</button>
-            <h2>Magician Settings</h2>
-            <p style="color: #ccc; font-size: 12px; margin-bottom: 20px;">All data is stored locally on this device for offline use.</p>
-            <p style="color: #ff3b30; font-size: 14px; margin-bottom: 20px;">
-                WARNING: This screen must be dismissed quickly if a spectator is nearby.
-            </p>
-
-            <div class="setting-group">
-                <label>1. Upload Homescreen Screenshot (PNG/JPG)</label>
-                <input type="file" id="bg-upload" accept="image/*">
-                <p id="bg-status" style="font-size: 12px; margin-top: 10px; color: #81b214;">No screenshot loaded.</p>
-            </div>
-
-            <div class="setting-group">
-                <label>2. Upload Dictionary JSON (e.g., ["BOTTLE","KETTLE"])</label>
-                <input type="file" id="dictionary-upload" accept=".json">
-                <p id="dict-status" style="font-size: 12px; margin-top: 10px; color: #81b214;">Current words: 0</p>
-                <button id="export-dictionary">Export Current Dictionary</button>
-                <button id="reset-dictionary" style="background: #ff3b30;">Reset Dictionary to Default</button>
-            </div>
-
-            <div class="setting-group">
-                <label>3. Advanced Options</label>
-                <input type="checkbox" id="vowel-y-toggle">
-                <label for="vowel-y-toggle" style="display: inline-block; margin-left: 5px;">Treat 'Y' as a vowel</label>
-            </div>
-        </div>
     </div>
 
     <script>
         // --- Core Application Logic ---
 
         const APP = {
-            DB_NAME: 'MagicianAppDB',
-            DB_VERSION: 1,
-            STORE_NAME: 'dictionary',
-            CONFIG_KEY: 'app_config',
             defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON"], 
             VOWELS: ['A', 'E', 'I', 'O', 'U'],
             PASSCODE: '',
             MATCHES: [],
-            CURRENT_DICTIONARY: [],
-            CONFIG: {
-                isYVowel: false,
-                wallpaper: null
-            },
+            CURRENT_DICTIONARY: [], // Will be loaded from default
+            
+            // NOTE: isYVowel setting is removed, 'Y' is always treated as a consonant.
 
             LETTER_SHAPES: {
                 1: new Set(['A', 'E', 'F', 'H', 'I', 'K', 'L', 'M', 'N', 'T', 'V', 'W', 'X', 'Y', 'Z']),
@@ -407,87 +324,10 @@
                 3: new Set(['C', 'O', 'S'])
             },
 
-            // --- IndexedDB Management ---
-            openDB() {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
-                        if (!db.objectStoreNames.contains(this.STORE_NAME)) {
-                            db.createObjectStore(this.STORE_NAME);
-                        }
-                    };
-                    request.onsuccess = (event) => { resolve(event.target.result); };
-                    request.onerror = (event) => { reject(event.target.error); };
-                });
-            },
-
-            async loadConfig() {
-                const db = await this.openDB();
-                return new Promise((resolve) => {
-                    const transaction = db.transaction([this.STORE_NAME], 'readonly');
-                    const store = transaction.objectStore(this.STORE_NAME);
-                    const request = store.get(this.CONFIG_KEY);
-                    request.onsuccess = (event) => {
-                        const storedConfig = event.target.result;
-                        if (storedConfig) {
-                            this.CONFIG = {...this.CONFIG, ...storedConfig};
-                        }
-                        resolve();
-                    };
-                    request.onerror = () => resolve(); 
-                });
-            },
-
-            async saveConfig() {
-                const db = await this.openDB();
-                return new Promise((resolve) => {
-                    const transaction = db.transaction([this.STORE_NAME], 'readwrite');
-                    const store = transaction.objectStore(this.STORE_NAME);
-                    store.put(this.CONFIG, this.CONFIG_KEY);
-                    transaction.oncomplete = resolve;
-                    transaction.onerror = (e) => { resolve(); };
-                });
-            },
-
-            async loadDictionary() {
-                const db = await this.openDB();
-                return new Promise((resolve) => {
-                    const transaction = db.transaction([this.STORE_NAME], 'readonly');
-                    const store = transaction.objectStore(this.STORE_NAME);
-                    const request = store.get('word_list');
-                    request.onsuccess = (event) => {
-                        this.CURRENT_DICTIONARY = event.target.result || this.defaultDictionary;
-                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
-                        resolve();
-                    };
-                    request.onerror = () => {
-                        this.CURRENT_DICTIONARY = this.defaultDictionary;
-                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length} (Default)`;
-                        resolve();
-                    };
-                });
-            },
-
-            async saveDictionary(dict) {
-                const db = await this.openDB();
-                return new Promise((resolve) => {
-                    const transaction = db.transaction([this.STORE_NAME], 'readwrite');
-                    const store = transaction.objectStore(this.STORE_NAME);
-                    store.put(dict, 'word_list');
-                    transaction.oncomplete = () => {
-                        this.CURRENT_DICTIONARY = dict;
-                        document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
-                        resolve();
-                    };
-                    transaction.onerror = (e) => { resolve(); };
-                });
-            },
-
             // --- Vowel & Word Helper Functions ---
             isVowel(char) {
                 const upper = char.toUpperCase();
-                return this.VOWELS.includes(upper) || (this.CONFIG.isYVowel && upper === 'Y');
+                return this.VOWELS.includes(upper);
             },
 
             getVowelIndices(word) {
@@ -740,108 +580,6 @@
                 this.updatePasscodeDots();
             },
 
-            // --- Settings Logic (Fixed Long Press) ---
-            setupSettings() {
-                const timeArea = document.getElementById('home-time');
-                const settingsOverlay = document.getElementById('settings-overlay');
-                let pressTimer = null;
-
-                const openSettings = () => {
-                    if (pressTimer !== null) {
-                        clearTimeout(pressTimer);
-                        pressTimer = null;
-                        settingsOverlay.style.display = 'flex';
-                    }
-                };
-
-                const startPress = (e) => {
-                    if (e.type === 'touchstart') e.preventDefault(); 
-                    if (pressTimer === null) { 
-                        pressTimer = setTimeout(openSettings, 3000); 
-                    }
-                };
-
-                const endPress = () => {
-                    if (pressTimer !== null) {
-                        clearTimeout(pressTimer);
-                        pressTimer = null;
-                    }
-                };
-
-                // Attach events:
-                timeArea.addEventListener('mousedown', startPress);
-                timeArea.addEventListener('mouseup', endPress);
-                timeArea.addEventListener('mouseleave', endPress);
-                timeArea.addEventListener('touchstart', startPress, { passive: false }); 
-                timeArea.addEventListener('touchend', endPress);
-                timeArea.addEventListener('touchcancel', endPress);
-
-                document.getElementById('close-settings').addEventListener('click', () => {
-                    settingsOverlay.style.display = 'none';
-                });
-                
-                // Wallpaper Upload
-                document.getElementById('bg-upload').addEventListener('change', (event) => {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const dataURL = e.target.result;
-                            document.getElementById('app').style.backgroundImage = `url('${dataURL}')`;
-                            this.CONFIG.wallpaper = dataURL;
-                            this.saveConfig();
-                            document.getElementById('bg-status').textContent = 'Screenshot uploaded successfully.';
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-
-                // Dictionary Upload
-                document.getElementById('dictionary-upload').addEventListener('change', (event) => {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = async (e) => {
-                            try {
-                                const dict = JSON.parse(e.target.result).map(word => word.toUpperCase());
-                                await this.saveDictionary(dict);
-                                alert(`Dictionary updated with ${dict.length} words.`);
-                            } catch (error) {
-                                alert("Error parsing JSON dictionary. Please ensure it is a valid JSON array of strings.");
-                            }
-                        };
-                        reader.readAsText(file);
-                    }
-                });
-                
-                // Export Dictionary
-                document.getElementById('export-dictionary').addEventListener('click', () => {
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.CURRENT_DICTIONARY, null, 2));
-                    const downloadAnchorNode = document.createElement('a');
-                    downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute("download", "magician_dictionary.json");
-                    document.body.appendChild(downloadAnchorNode);
-                    downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
-                });
-
-                // Reset Dictionary
-                document.getElementById('reset-dictionary').addEventListener('click', async () => {
-                    if (confirm("Are you sure you want to reset the dictionary to the default word list?")) {
-                        await this.saveDictionary(this.defaultDictionary);
-                        alert("Dictionary reset to default.");
-                    }
-                });
-
-                // 'Y' as Vowel Toggle
-                const yToggle = document.getElementById('vowel-y-toggle');
-                yToggle.checked = this.CONFIG.isYVowel;
-                yToggle.addEventListener('change', () => {
-                    this.CONFIG.isYVowel = yToggle.checked;
-                    this.saveConfig();
-                });
-            },
-
             // --- Initialization ---
             async init() {
                 // Register Service Worker for PWA/Offline
@@ -853,13 +591,7 @@
                     }
                 }
                 
-                await this.loadConfig();
-                await this.loadDictionary();
-
-                if (this.CONFIG.wallpaper) {
-                    document.getElementById('app').style.backgroundImage = `url('${this.CONFIG.wallpaper}')`;
-                    document.getElementById('bg-status').textContent = 'Screenshot loaded.';
-                }
+                this.CURRENT_DICTIONARY = this.defaultDictionary;
 
                 document.querySelectorAll('.keypad-button').forEach(button => {
                     button.addEventListener('click', () => {
@@ -869,8 +601,6 @@
                 
                 this.updateTime();
                 setInterval(() => this.updateTime(), 1000); 
-
-                this.setupSettings();
             }
         };
 
