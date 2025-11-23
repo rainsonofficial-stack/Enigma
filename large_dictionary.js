@@ -535,6 +535,7 @@ const LARGE_DICTIONARY = [
   "television",
   "thermometer",
   "thimble",
+  "ticket",
   "tie",
   "tissuebox",
   "toaster",
