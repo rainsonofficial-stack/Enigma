@@ -239,5 +239,4 @@ const LARGE_DICTIONARY = [
   "wineglass",
   "wire",
   "wrench",
-  "ziplocbag"
 ];
