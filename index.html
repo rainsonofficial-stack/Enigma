@@ -92,7 +92,7 @@
             border-color: white;
         }
 
-        /* --- Passcode Error Shake Animation (NEW) --- */
+        /* --- Passcode Error Shake Animation --- */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-10px); }
@@ -109,7 +109,7 @@
             border-color: #ff3b30; /* Red border */
             background-color: transparent !important;
         }
-        /* --- END NEW CSS --- */
+        /* --- END CSS --- */
 
 
         .keypad {
@@ -338,6 +338,11 @@
             MATCHES: [],
             CURRENT_DICTIONARY: [], 
             
+            // NEW: History stack for word list states
+            HISTORY: [], 
+            LAST_TAP_TIME: 0,
+            DOUBLE_TAP_THRESHOLD: 300, // milliseconds
+            
             LETTER_SHAPES: {
                 1: new Set(['A', 'E', 'F', 'H', 'I', 'K', 'L', 'M', 'N', 'T', 'V', 'W', 'X', 'Y', 'Z']),
                 2: new Set(['B', 'D', 'G', 'J', 'P', 'Q', 'R', 'U']),
@@ -409,7 +414,7 @@
                 });
             },
 
-            // --- Disambiguation Logic ---
+            // --- Disambiguation Logic (FIXED) ---
             getDisambiguationIndex(matches) {
                 if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
 
@@ -512,12 +517,7 @@
             },
 
             updateOptionsDisplay(matches) {
-                // NOTE: This function is only called on UNLOCK when matches > 0 or < 6 digits were entered.
-                // The 6-digit zero-match case is handled by unlock/handlePasscodeError now.
-
                 if ((!matches || matches.length === 0) && this.PASSCODE.length === 6) {
-                    // This block should technically never run if unlock() is working correctly, 
-                    // but we keep the output here just in case.
                     this.MATCHES = [];
                     document.getElementById('options-list').innerHTML = `<span class="option-word" style="background: #ff3b30;">NO MATCHES FOUND</span>`;
                     this.hideDisambiguationUI();
@@ -584,13 +584,38 @@
             
             // --- Disambiguation Actions ---
             handleChipClick(letter, index) {
+                // PUSH current matches to history BEFORE filtering
+                this.HISTORY.push(this.MATCHES);
+                
                 const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
                 this.updateOptionsDisplay(filtered); 
             },
 
+            // NEW: Function to restore the previous state
+            rollbackToPreviousState() {
+                if (this.HISTORY.length > 1) { // We keep the initial full match list (index 0)
+                    const previousMatches = this.HISTORY.pop();
+                    // We pop twice because the current display state is the last item added to history
+                    const actualPreviousMatches = this.HISTORY[this.HISTORY.length - 1]; 
+                    
+                    this.updateOptionsDisplay(actualPreviousMatches);
+                    // Force the disambiguation UI to show based on the recovered list
+                    this.showDisambiguationUI(actualPreviousMatches);
+
+                } else if (this.HISTORY.length === 1) {
+                    // This handles going back to the *initial* list of matches
+                    const initialMatches = this.HISTORY[0];
+                    this.updateOptionsDisplay(initialMatches);
+                    this.showDisambiguationUI(initialMatches);
+                }
+                
+                // Note: If HISTORY is empty, nothing happens, which is correct (no state to rollback to).
+            },
+
+
             // --- Lock/Unlock Flow (Passcode Logic) ---
             
-            // NEW: Error Handler for shake animation
+            // Error Handler for shake animation
             async handlePasscodeError() {
                 const display = document.querySelector('.passcode-display');
                 
@@ -610,10 +635,15 @@
                 const matches = this.filterDictionary(this.PASSCODE);
                 
                 if (matches.length === 0) {
-                    // NEW: If no words match the 6-digit code, show the error and return.
+                    // If no words match the 6-digit code, show the error and return.
                     await this.handlePasscodeError();
                     return; 
                 }
+                
+                // PUSH the *initial* full list of matches to history before displaying/filtering
+                // We clear history first to remove any old session data
+                this.HISTORY = []; 
+                this.HISTORY.push(matches);
                 
                 // --- Proceed with successful unlock ---
                 const lockscreen = document.getElementById('lockscreen');
@@ -648,6 +678,30 @@
                     this.unlock();
                 }
             },
+            
+            // NEW: Double Tap Handler
+            handleDoubleTap(event) {
+                const currentTime = new Date().getTime();
+                const timeSinceLastTap = currentTime - this.LAST_TAP_TIME;
+                
+                // Check if the double-tap condition is met
+                if (timeSinceLastTap < this.DOUBLE_TAP_THRESHOLD && timeSinceLastTap > 0) {
+                    // Check if the tap target is NOT an interactive element
+                    // We check if the target is *within* a restricted area
+                    const target = event.target;
+                    const isInteractive = target.closest('.letter-chip') || target.closest('.option-word') || target.closest('.keypad') || target.closest('#disambiguation-ui');
+                    
+                    if (!isInteractive && document.getElementById('home-screen').classList.contains('active')) {
+                        this.rollbackToPreviousState();
+                        this.LAST_TAP_TIME = 0; // Reset to prevent triple/quadruple taps
+                        event.preventDefault(); // Stop default browser action
+                        return;
+                    }
+                }
+                
+                // Update last tap time for the next check
+                this.LAST_TAP_TIME = currentTime;
+            },
 
             // --- Initialization ---
             async init() {
@@ -676,6 +730,10 @@
                         this.handlePasscode(button.getAttribute('data-key'));
                     });
                 });
+                
+                // Add the double-tap listener to the whole app container
+                document.getElementById('app').addEventListener('click', (e) => this.handleDoubleTap(e));
+                document.getElementById('app').addEventListener('touchstart', (e) => this.handleDoubleTap(e)); // For mobile devices
                 
                 this.updateTime();
                 setInterval(() => this.updateTime(), 1000); 
