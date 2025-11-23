@@ -156,6 +156,7 @@ const LARGE_DICTIONARY = [
   "dumbbell",
   "duster",
   "dustbin",
+  "dustpan",
   "earbud",
   "earbuds",
   "earphone",
