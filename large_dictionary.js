@@ -437,6 +437,7 @@ const LARGE_DICTIONARY = [
   "sandal",
   "saw",
   "scarf",
+  "scentedcandle",
   "scrapbook",
   "scissors",
   "scissor",
