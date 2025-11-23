@@ -1,21 +1,21 @@
 {
-    "name": "Magician's Tool",
-    "short_name": "Magic Lock",
-    "description": "A disguised utility app for a magician's code system.",
+    "name": "Unlock",
+    "short_name": "Unlock",
+    "description": "A clever passcode utility disguised as a lock screen.",
     "start_url": "/index.html",
-    "display": "standalone",
-    "background_color": "#1a1a2e",
-    "theme_color": "#1a1a2e",
+    "display": "fullscreen", 
+    "background_color": "#000000",
+    "theme_color": "#000000",
     "icons": [
-        {
-            "src": "icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
+      {
+        "src": "icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      },
+      {
+        "src": "icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
     ]
 }
