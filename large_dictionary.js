@@ -511,6 +511,7 @@ const LARGE_DICTIONARY = [
   "whiteboard",
   "wifirouter",
   "window",
+  "wiper",
   "winebottle",
   "wineglass",
   "wire",
