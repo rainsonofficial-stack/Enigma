@@ -130,36 +130,55 @@
             height: 100%;
             opacity: 0;
             pointer-events: none;
+            /* Added padding to prevent content from touching the edges */
+            padding: 10px; 
+            box-sizing: border-box;
         }
         #home-screen.active {
             opacity: 1;
             pointer-events: auto;
         }
 
-        /* Discreet Reveal Area: Lower Right (Fixed Position) */
-        #reveal-area {
+        /* Hiding the old reveal area to use the new list */
+        #reveal-area { 
+            display: none !important; 
+        }
+
+        /* NEW: Container for the List of Options (Aligned Right) */
+        #options-list {
             position: absolute;
-            bottom: 4%; 
-            right: 2%; 
-            font-size: 11px;
-            color: rgba(0, 0, 0, 0.8); 
-            background: rgba(255, 255, 255, 0.7); 
-            padding: 1px 4px;
-            border-radius: 3px;
+            bottom: 4%;
+            right: 2%;
+            max-height: 50%;
+            width: auto;
+            max-width: 96%;
+            overflow-y: auto;
             z-index: 100;
             pointer-events: none;
+            text-align: right; /* Align the content right */
+        }
+        
+        .option-word {
+            display: block;
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.8);
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1px 4px;
+            margin-bottom: 2px;
+            border-radius: 3px;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 700;
+            white-space: nowrap; /* Keep words from wrapping */
         }
-        
-        /* Disambiguation Area (Notification/Widget Style) */
+
+        /* Disambiguation Area (Clue Widget) - Positioned above Options List, Aligned Right */
         #disambiguation-ui {
             position: absolute;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
+            bottom: calc(4% + 20px); 
+            right: 2%;
+            transform: none; 
+            width: 96%;
             max-width: 350px;
             background: rgba(45, 45, 45, 0.9);
             border-radius: 12px;
@@ -170,6 +189,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease-in-out;
+            text-align: right; /* Align header and content right */
         }
         #disambiguation-ui.active {
             opacity: 1;
@@ -181,6 +201,7 @@
             font-size: 16px;
             font-weight: 500;
             color: #ccc;
+            text-align: right; /* Ensure header is right-aligned */
         }
         
         .chip-container {
@@ -188,6 +209,7 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
+            justify-content: flex-end; /* Align chips to the right */
         }
         .letter-chip {
             padding: 8px 12px;
@@ -207,6 +229,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            /* Added margin-left auto to push input to the right */
+            margin-left: auto; 
+            justify-content: flex-end;
+        }
+        .fallback-input span {
+            /* Ensures 'Type the letter:' is visible */
+            margin-right: 10px;
         }
         .fallback-input input {
             width: 40px;
@@ -225,6 +254,7 @@
             color: #ff3b30;
             margin-top: 5px;
             display: none;
+            text-align: right;
         }
     </style>
 </head>
@@ -271,7 +301,10 @@
 
         <div id="home-screen" class="hidden">
             
-            <div id="reveal-area">NO MATCH</div>
+            <div id="reveal-area">NO MATCH</div> 
+            
+            <div id="options-list">
+                </div>
             
             <div id="disambiguation-ui" class="hidden">
                 <h4 id="disamb-header"></h4>
@@ -418,15 +451,44 @@
                     dot.classList.toggle('active', index < this.PASSCODE.length);
                 });
             },
-
-            revealWord(word) {
-                document.getElementById('reveal-area').textContent = `ID: ${word}`;
-                this.hideDisambiguationUI();
+            
+            // NEW: Function to render the word options list
+            updateOptionsList(matches) {
+                const listContainer = document.getElementById('options-list');
+                listContainer.innerHTML = '';
+                
+                // Show all words if no matches yet (passcode is empty)
+                const wordsToShow = (matches && matches.length > 0) ? matches : this.CURRENT_DICTIONARY;
+                
+                // Only show a list if we have more than one word. If one, it should be the final ID.
+                if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
+                     wordsToShow.forEach(word => {
+                        const wordElement = document.createElement('span');
+                        wordElement.classList.add('option-word');
+                        wordElement.textContent = word;
+                        listContainer.appendChild(wordElement);
+                    });
+                }
             },
 
-            hideDiscreetReveal() {
-                document.getElementById('reveal-area').textContent = 'NO MATCH';
-                this.hideDisambiguationUI();
+            // NEW: Unified function to handle displaying words and the clue widget
+            updateOptionsDisplay(matches) {
+                if (!matches || matches.length === 0) {
+                    // Requirement 1: If no matches, show the full dictionary list.
+                    this.MATCHES = [];
+                    this.updateOptionsList(this.CURRENT_DICTIONARY);
+                    this.hideDisambiguationUI();
+                } else if (matches.length === 1) {
+                    // Single match: Show the final word clearly
+                    this.MATCHES = matches;
+                    document.getElementById('options-list').innerHTML = `<span class="option-word">ID: ${matches[0]}</span>`;
+                    this.hideDisambiguationUI();
+                } else {
+                    // Multiple matches: Show the list and the disambiguation widget
+                    this.MATCHES = matches;
+                    this.updateOptionsList(matches);
+                    this.showDisambiguationUI(matches);
+                }
             },
 
             showDisambiguationUI(matches) {
@@ -439,10 +501,12 @@
                 disambContent.innerHTML = '';
 
                 if (index === -1) {
-                    this.revealWord('ERROR: AMBIGUOUS');
+                    // If ambiguous, show the final list with an error note
+                    this.updateOptionsList(matches);
+                    document.getElementById('options-list').innerHTML += `<span class="option-word" style="background: #ff3b30;">ERROR: AMBIGUOUS</span>`;
                     disambUI.classList.add('hidden');
                     return;
-                    }
+                }
 
                 document.getElementById('disamb-header').textContent = `Clue: Letter at position ${index}`;
                 disambUI.classList.remove('hidden');
@@ -491,11 +555,7 @@
             // --- Disambiguation Actions ---
             handleChipClick(letter, index) {
                 const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
-                if (filtered.length === 1) {
-                    this.revealWord(filtered[0]);
-                } else {
-                    this.showDisambiguationUI(filtered); 
-                }
+                this.updateOptionsDisplay(filtered); // Calls the new display handler
             },
 
             handleFallbackInput(letter, index) {
@@ -504,10 +564,8 @@
 
                 if (filtered.length === 0) {
                     document.getElementById('no-match-msg').style.display = 'block';
-                } else if (filtered.length === 1) {
-                    this.revealWord(filtered[0]);
                 } else {
-                    this.showDisambiguationUI(filtered);
+                    this.updateOptionsDisplay(filtered); // Calls the new display handler
                 }
             },
 
@@ -531,16 +589,9 @@
                 const lockscreen = document.getElementById('lockscreen');
                 const homeScreen = document.getElementById('home-screen');
 
-                this.MATCHES = this.filterDictionary(this.PASSCODE);
-
-                if (this.MATCHES.length === 1) {
-                    this.revealWord(this.MATCHES[0]);
-                } else if (this.MATCHES.length > 1) {
-                    this.showDisambiguationUI(this.MATCHES);
-                } else {
-                    this.hideDiscreetReveal();
-                }
-
+                const matches = this.filterDictionary(this.PASSCODE);
+                this.updateOptionsDisplay(matches); // Use the new display handler
+                
                 lockscreen.style.transition = 'opacity 0.5s';
                 lockscreen.style.opacity = '0';
                 
@@ -559,8 +610,17 @@
                 // Register Service Worker for PWA/Offline
                 if ('serviceWorker' in navigator) {
                     try {
-                        // FINAL PWA FIX: Using the aggressive cache buster service worker.
-                        await navigator.serviceWorker.register('sw_cache_buster.js'); 
+                        const registration = await navigator.serviceWorker.register('sw_cache_buster.js'); 
+                        
+                        // This attempts to reload the page instantly if the service worker updates,
+                        // ensuring the fullscreen manifest is read immediately. (PWA Fix)
+                        if (registration.installing) {
+                            registration.installing.addEventListener('statechange', () => {
+                                if (registration.active) {
+                                    window.location.reload();
+                                }
+                            });
+                        }
                     } catch (error) {
                         console.error('Service Worker registration failed:', error);
                     }
@@ -576,6 +636,9 @@
                 
                 this.updateTime();
                 setInterval(() => this.updateTime(), 1000); 
+                
+                // NEW: Initialize the list to show all options when the app first loads the home screen
+                this.updateOptionsDisplay(null);
             }
         };
 
