@@ -444,7 +444,7 @@
                 });
             },
             
-            // ✅ UPDATED FUNCTION: Uses target="_system" to open in external browser
+            // ✅ UPDATED FUNCTION: Uses JavaScript's window.open with target="_system" 
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -453,15 +453,21 @@
                 
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
+                        const searchUrl = `https://www.google.com/search?q=${word}`;
+
                         const wordLink = document.createElement('a'); 
                         wordLink.classList.add('option-word');
                         wordLink.textContent = word;
                         
-                        wordLink.setAttribute('href', `https://www.google.com/search?q=${word}`);
-                        // Set target="_system" to force external browser on PWAs
-                        wordLink.setAttribute('target', '_system'); 
-
-                        // Remove event listener as we rely on native <a> tag behavior
+                        // Set the href for fallback/accessibility
+                        wordLink.setAttribute('href', searchUrl);
+                        
+                        // Use a click listener to explicitly force external browser open
+                        wordLink.addEventListener('click', (e) => {
+                            e.preventDefault(); 
+                            // The '_system' target is often respected by PWA/Webview environments for external links
+                            window.open(searchUrl, '_system'); 
+                        });
                         
                         listContainer.appendChild(wordLink);
                     });
@@ -481,8 +487,9 @@
                     
                 } else if (matches.length === 1) {
                     this.MATCHES = matches;
-                    // ✅ UPDATED: Use target="_system" for single match display
-                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="https://www.google.com/search?q=${matches[0]}" target="_system">ID: ${matches[0]}</a>`;
+                    // ✅ UPDATED: Use inline onclick and '_system' target for single match display
+                    const word = matches[0];
+                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" onclick="window.open('https://www.google.com/search?q=${word}', '_system'); return false;" href="#">ID: ${word}</a>`;
                     this.hideDisambiguationUI();
 
                 } else {
