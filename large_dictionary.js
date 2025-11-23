@@ -564,6 +564,7 @@ const LARGE_DICTIONARY = [
   "tree",
   "tricycle",
   "tripod",
+  "truck",
   "trunk",
   "trouser",
   "trolley",
