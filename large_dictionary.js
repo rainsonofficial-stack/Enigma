@@ -295,6 +295,7 @@ const LARGE_DICTIONARY = [
   "medal",
   "medicine",
   "microwave",
+  "microphone",
   "mirror",
   "mobilephone",
   "modelcar",
