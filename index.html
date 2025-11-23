@@ -149,14 +149,13 @@
             position: absolute;
             bottom: 4%;
             right: 2%;
-            /* Cap the maximum height of the word list (Fixes Overlap) */
             max-height: 25%; 
             width: auto;
             max-width: 96%;
-            overflow-y: auto; /* Allow scrolling if the list gets long */
+            overflow-y: auto; 
             z-index: 100;
             pointer-events: none;
-            text-align: right; /* Align the content right */
+            text-align: right; 
         }
         
         .option-word {
@@ -170,27 +169,27 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 700;
-            white-space: nowrap; /* Keep words from wrapping */
+            white-space: nowrap;
         }
 
-        /* Disambiguation Area (Clue Widget) - Positioned above Options List, Aligned Right (Fixes Overlap) */
+        /* Disambiguation Area (Clue Widget) - Positioned above Options List, Aligned Right (TRANSPARENT BACKGROUND) */
         #disambiguation-ui {
             position: absolute;
-            bottom: 150px; /* Pushed high enough to clear the options list */
+            bottom: 150px; 
             right: 2%;
             transform: none; 
             width: 96%;
             max-width: 350px;
-            background: rgba(45, 45, 45, 0.9);
+            /* REMOVED: background: rgba(45, 45, 45, 0.9); */
+            /* REMOVED: box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); */
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 99;
             color: white;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease-in-out;
-            text-align: right; /* Align header and content right */
+            text-align: right; 
         }
         #disambiguation-ui.active {
             opacity: 1;
@@ -201,8 +200,9 @@
             margin: 0 0 10px 0;
             font-size: 16px;
             font-weight: 500;
-            color: #ccc;
-            text-align: right; /* Ensure header is right-aligned */
+            /* Ensure the text is visible over the background image */
+            color: rgba(255, 255, 255, 0.9); 
+            text-align: right; 
         }
         
         .chip-container {
@@ -210,11 +210,13 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
-            justify-content: flex-end; /* Align chips to the right */
+            justify-content: flex-end; 
         }
+        /* UPDATED: Letter Chip Styling (Translucent white background, black text) */
         .letter-chip {
             padding: 8px 12px;
-            background-color: #007aff;
+            background-color: rgba(255, 255, 255, 0.7); /* Translucent White */
+            color: rgba(0, 0, 0, 0.8); /* Dark Text */
             border-radius: 20px;
             font-size: 18px;
             font-weight: 600;
@@ -222,20 +224,18 @@
             user-select: none;
             transition: background-color 0.1s;
         }
-        .letter-chip:hover {
-            background-color: #005bb5;
+        .letter-chip:active {
+            background-color: rgba(255, 255, 255, 0.9);
         }
 
         .fallback-input {
             display: flex;
             align-items: center;
             gap: 10px;
-            /* Added margin-left auto to push input to the right */
             margin-left: auto; 
             justify-content: flex-end;
         }
         .fallback-input span {
-            /* Ensures 'Type the letter:' is visible */
             margin-right: 10px;
         }
         .fallback-input input {
@@ -317,12 +317,14 @@
             </div>
     </div>
 
+    <script src="large_dictionary.js"></script>
+
     <script>
         // --- Core Application Logic ---
 
         const APP = {
-            // NOTE: Add your target words to this list!
-            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON", "PILLOW"], 
+            // USES THE GLOBAL VARIABLE LOADED FROM large_dictionary.js
+            defaultDictionary: LARGE_DICTIONARY, 
             VOWELS: ['A', 'E', 'I', 'O', 'U'],
             PASSCODE: '',
             MATCHES: [],
@@ -518,8 +520,9 @@
                     disambUI.classList.add('hidden');
                     return;
                 }
-
-                document.getElementById('disamb-header').textContent = `Clue: Letter at position ${index}`;
+                
+                // UPDATED: Changed the header to just "Position X"
+                document.getElementById('disamb-header').textContent = `Position ${index}`;
                 disambUI.classList.remove('hidden');
                 disambUI.classList.add('active');
 
@@ -636,6 +639,7 @@
                     }
                 }
                 
+                // Assign the loaded dictionary to the current dictionary
                 this.CURRENT_DICTIONARY = this.defaultDictionary;
 
                 document.querySelectorAll('.keypad-button').forEach(button => {
