@@ -272,6 +272,8 @@ const LARGE_DICTIONARY = [
   "lightbulb",
   "lipstick",
   "lipbalm",
+  "loafer",
+  "loafers",
   "lock",
   "lotion",
   "lollipop",
