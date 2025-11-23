@@ -277,6 +277,7 @@ const LARGE_DICTIONARY = [
   "pants",
   "pantryjar",
   "paper",
+  "paperclip",
   "papercup",
   "paperweight",
   "parrottoy",
