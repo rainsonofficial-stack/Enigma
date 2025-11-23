@@ -414,58 +414,50 @@
                 });
             },
 
-            // --- Disambiguation Logic (FIXED) ---
+            // --- Disambiguation Logic (FIXED: Best-Fit/Max Unique Letters) ---
             getDisambiguationIndex(matches) {
                 if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
 
-                // Determine the minimum relevant length among the matches
                 const minLength = Math.min(...matches.map(w => w.length));
-                
-                // Set the search limit: 1 position beyond the shortest word, but max 8.
+                // Limit search to position 8 or 1 past the shortest word
                 const searchLimit = Math.min(minLength + 1, 8); 
 
                 let bestIndex = -1;
-                
-                // Start at i=1 (2nd letter position) and go up to the calculated limit.
+                let maxUniqueLetters = 1; // Start at 1 (since 0 or 1 unique letter is not helpful)
+
+                // 1. Iterate through all possible positions to find the best one
                 for (let i = 1; i < searchLimit; i++) { 
                     const lettersAtPosition = matches
                         .map(word => word.length > i ? word[i] : null)
                         .filter(l => l !== null);
                         
-                    // Skip if no words are long enough to have a letter at this position
                     if (lettersAtPosition.length === 0) continue;
 
                     const uniqueLetters = new Set(lettersAtPosition);
 
-                    // We are only interested if there is more than one unique letter here.
-                    if (uniqueLetters.size > 1) {
-                         // Primary check: Ensure high coverage (at least half the words have a letter here)
-                         if (lettersAtPosition.length / matches.length > 0.5) {
-                            return { 
-                                index: i + 1, // Return 1-based position
-                                letters: Array.from(uniqueLetters).sort(), 
-                                type: 'unique' 
-                            };
-                        } else if (bestIndex === -1) {
-                            // Keep track of the first useful index as a secondary fallback
-                            bestIndex = i + 1;
-                        }
+                    // 2. Prioritize maximum unique letters AND ensure high coverage (at least 50% of matches must contribute)
+                    if (uniqueLetters.size > maxUniqueLetters && 
+                        (lettersAtPosition.length / matches.length > 0.5)) {
+                        
+                        maxUniqueLetters = uniqueLetters.size;
+                        bestIndex = i + 1;
                     }
                 }
 
-                // If no high-coverage position was found, use the first "bestIndex" as a fallback
-                if (bestIndex !== -1) {
-                    const fallbackLetters = matches
+                // 3. If a good index was found, extract the letters for that position
+                if (bestIndex !== -1 && maxUniqueLetters > 1) {
+                    const lettersForBestIndex = matches
                         .map(word => word.length >= bestIndex ? word[bestIndex - 1] : null)
                         .filter(l => l !== null);
                         
                     return { 
                         index: bestIndex, 
-                        letters: Array.from(new Set(fallbackLetters)).sort(), 
+                        letters: Array.from(new Set(lettersForBestIndex)).sort(), 
                         type: 'unique' 
                     }; 
                 }
 
+                // Fallback for cases where high coverage/high distinction wasn't met up to limit
                 return { index: -1, letters: [], type: 'unique' };
             },
 
@@ -591,25 +583,22 @@
                 this.updateOptionsDisplay(filtered); 
             },
 
-            // NEW: Function to restore the previous state
+            // NEW: Function to restore the previous state (for double-tap)
             rollbackToPreviousState() {
-                if (this.HISTORY.length > 1) { // We keep the initial full match list (index 0)
-                    const previousMatches = this.HISTORY.pop();
-                    // We pop twice because the current display state is the last item added to history
-                    const actualPreviousMatches = this.HISTORY[this.HISTORY.length - 1]; 
+                if (this.HISTORY.length > 1) { // We ensure there's at least one previous state to revert to
+                    this.HISTORY.pop(); // Discard the current (last applied filter) state
+                    const actualPreviousMatches = this.HISTORY[this.HISTORY.length - 1]; // Get the state before that
                     
                     this.updateOptionsDisplay(actualPreviousMatches);
                     // Force the disambiguation UI to show based on the recovered list
                     this.showDisambiguationUI(actualPreviousMatches);
 
                 } else if (this.HISTORY.length === 1) {
-                    // This handles going back to the *initial* list of matches
+                    // This handles going back to the *initial* list of matches (the first element added)
                     const initialMatches = this.HISTORY[0];
                     this.updateOptionsDisplay(initialMatches);
                     this.showDisambiguationUI(initialMatches);
                 }
-                
-                // Note: If HISTORY is empty, nothing happens, which is correct (no state to rollback to).
             },
 
 
@@ -679,7 +668,7 @@
                 }
             },
             
-            // NEW: Double Tap Handler
+            // Double Tap Handler
             handleDoubleTap(event) {
                 const currentTime = new Date().getTime();
                 const timeSinceLastTap = currentTime - this.LAST_TAP_TIME;
@@ -687,7 +676,6 @@
                 // Check if the double-tap condition is met
                 if (timeSinceLastTap < this.DOUBLE_TAP_THRESHOLD && timeSinceLastTap > 0) {
                     // Check if the tap target is NOT an interactive element
-                    // We check if the target is *within* a restricted area
                     const target = event.target;
                     const isInteractive = target.closest('.letter-chip') || target.closest('.option-word') || target.closest('.keypad') || target.closest('#disambiguation-ui');
                     
