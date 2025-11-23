@@ -172,6 +172,8 @@ const LARGE_DICTIONARY = [
   "headband",
   "headphone",
   "headphones",
+  "heel",
+  "heels",
   "helmet",
   "highlighter",
   "hose",
