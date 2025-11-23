@@ -139,7 +139,7 @@
             pointer-events: auto;
         }
 
-        /* Hiding the old reveal area to use the new list */
+        /* Hiding the old reveal area */
         #reveal-area { 
             display: none !important; 
         }
@@ -149,10 +149,11 @@
             position: absolute;
             bottom: 4%;
             right: 2%;
-            max-height: 50%;
+            /* Cap the maximum height of the word list (Fixes Overlap) */
+            max-height: 25%; 
             width: auto;
             max-width: 96%;
-            overflow-y: auto;
+            overflow-y: auto; /* Allow scrolling if the list gets long */
             z-index: 100;
             pointer-events: none;
             text-align: right; /* Align the content right */
@@ -172,10 +173,10 @@
             white-space: nowrap; /* Keep words from wrapping */
         }
 
-        /* Disambiguation Area (Clue Widget) - Positioned above Options List, Aligned Right */
+        /* Disambiguation Area (Clue Widget) - Positioned above Options List, Aligned Right (Fixes Overlap) */
         #disambiguation-ui {
             position: absolute;
-            bottom: calc(4% + 20px); 
+            bottom: 150px; /* Pushed high enough to clear the options list */
             right: 2%;
             transform: none; 
             width: 96%;
@@ -320,7 +321,8 @@
         // --- Core Application Logic ---
 
         const APP = {
-            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON"], 
+            // NOTE: Add your target words to this list!
+            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON", "PILLOW"], 
             VOWELS: ['A', 'E', 'I', 'O', 'U'],
             PASSCODE: '',
             MATCHES: [],
@@ -452,7 +454,7 @@
                 });
             },
             
-            // NEW: Function to render the word options list
+            // Function to render the word options list
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -460,7 +462,7 @@
                 // Show all words if no matches yet (passcode is empty)
                 const wordsToShow = (matches && matches.length > 0) ? matches : this.CURRENT_DICTIONARY;
                 
-                // Only show a list if we have more than one word. If one, it should be the final ID.
+                // Only show a list if we have more than one word, or if the passcode is not started (to show full dictionary)
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
                         const wordElement = document.createElement('span');
@@ -471,20 +473,29 @@
                 }
             },
 
-            // NEW: Unified function to handle displaying words and the clue widget
+            // Unified function to handle displaying words and the clue widget
             updateOptionsDisplay(matches) {
-                if (!matches || matches.length === 0) {
-                    // Requirement 1: If no matches, show the full dictionary list.
+                // Check if passcode is COMPLETE (length 6) and has NO matches
+                if ((!matches || matches.length === 0) && this.PASSCODE.length === 6) {
+                    // Passcode is entered but found nothing: Show NO MATCHES
+                    this.MATCHES = [];
+                    document.getElementById('options-list').innerHTML = `<span class="option-word" style="background: #ff3b30;">NO MATCHES FOUND</span>`;
+                    this.hideDisambiguationUI();
+
+                } else if ((!matches || matches.length === 0) && this.PASSCODE.length < 6) {
+                    // Passcode is incomplete or not started: Show the full dictionary list (per request)
                     this.MATCHES = [];
                     this.updateOptionsList(this.CURRENT_DICTIONARY);
                     this.hideDisambiguationUI();
+                    
                 } else if (matches.length === 1) {
                     // Single match: Show the final word clearly
                     this.MATCHES = matches;
                     document.getElementById('options-list').innerHTML = `<span class="option-word">ID: ${matches[0]}</span>`;
                     this.hideDisambiguationUI();
+
                 } else {
-                    // Multiple matches: Show the list and the disambiguation widget
+                    // Multiple matches: Show the filtered list and the disambiguation widget
                     this.MATCHES = matches;
                     this.updateOptionsList(matches);
                     this.showDisambiguationUI(matches);
@@ -612,8 +623,7 @@
                     try {
                         const registration = await navigator.serviceWorker.register('sw_cache_buster.js'); 
                         
-                        // This attempts to reload the page instantly if the service worker updates,
-                        // ensuring the fullscreen manifest is read immediately. (PWA Fix)
+                        // PWA Fix: Force activation of the new service worker
                         if (registration.installing) {
                             registration.installing.addEventListener('statechange', () => {
                                 if (registration.active) {
@@ -637,7 +647,7 @@
                 this.updateTime();
                 setInterval(() => this.updateTime(), 1000); 
                 
-                // NEW: Initialize the list to show all options when the app first loads the home screen
+                // Initialize the list to show all options when the app first loads the home screen
                 this.updateOptionsDisplay(null);
             }
         };
