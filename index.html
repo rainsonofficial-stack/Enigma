@@ -130,7 +130,6 @@
             height: 100%;
             opacity: 0;
             pointer-events: none;
-            /* Added padding to prevent content from touching the edges */
             padding: 10px; 
             box-sizing: border-box;
         }
@@ -144,7 +143,7 @@
             display: none !important; 
         }
 
-        /* NEW: Container for the List of Options (Aligned Right) */
+        /* Container for the List of Options (Aligned Right) */
         #options-list {
             position: absolute;
             bottom: 4%;
@@ -172,16 +171,15 @@
             white-space: nowrap;
         }
 
-        /* Disambiguation Area (Clue Widget) - Positioned above Options List, Aligned Right (TRANSPARENT BACKGROUND) */
+        /* Disambiguation Area (Clue Widget) */
         #disambiguation-ui {
-            position: absolute;
-            bottom: 150px; 
+            /* FIX 1: Move the clue widget HIGHER to prevent overlap */
+            bottom: 250px; 
             right: 2%;
+            position: absolute;
             transform: none; 
             width: 96%;
             max-width: 350px;
-            /* REMOVED: background: rgba(45, 45, 45, 0.9); */
-            /* REMOVED: box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); */
             border-radius: 12px;
             padding: 15px;
             z-index: 99;
@@ -200,7 +198,6 @@
             margin: 0 0 10px 0;
             font-size: 16px;
             font-weight: 500;
-            /* Ensure the text is visible over the background image */
             color: rgba(255, 255, 255, 0.9); 
             text-align: right; 
         }
@@ -212,11 +209,11 @@
             margin-top: 10px;
             justify-content: flex-end; 
         }
-        /* UPDATED: Letter Chip Styling (Translucent white background, black text) */
         .letter-chip {
             padding: 8px 12px;
-            background-color: rgba(255, 255, 255, 0.7); /* Translucent White */
-            color: rgba(0, 0, 0, 0.8); /* Dark Text */
+            background-color: rgba(255, 255, 255, 0.7); 
+            color: rgba(0, 0, 0, 0.8); 
+            border: 1px solid rgba(0, 0, 0, 0.1); 
             border-radius: 20px;
             font-size: 18px;
             font-weight: 600;
@@ -228,28 +225,11 @@
             background-color: rgba(255, 255, 255, 0.9);
         }
 
+        /* Fallback input style (hidden) */
         .fallback-input {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto; 
-            justify-content: flex-end;
+            display: none !important; 
         }
-        .fallback-input span {
-            margin-right: 10px;
-        }
-        .fallback-input input {
-            width: 40px;
-            height: 40px;
-            text-align: center;
-            font-size: 20px;
-            text-transform: uppercase;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            outline: none;
-        }
+        
         #no-match-msg {
             font-size: 12px;
             color: #ff3b30;
@@ -323,7 +303,6 @@
         // --- Core Application Logic ---
 
         const APP = {
-            // USES THE GLOBAL VARIABLE LOADED FROM large_dictionary.js
             defaultDictionary: LARGE_DICTIONARY, 
             VOWELS: ['A', 'E', 'I', 'O', 'U'],
             PASSCODE: '',
@@ -429,11 +408,12 @@
 
                 if (bestIndex !== -1) {
                     const fallbackLetters = matches.map(word => word.length >= bestIndex ? word[bestIndex - 1] : null).filter(l => l !== null);
+                    // Force the type to 'unique' to trigger the chip UI
                     return { 
                         index: bestIndex, 
                         letters: Array.from(new Set(fallbackLetters)).sort(), 
-                        type: 'fallback' 
-                    };
+                        type: 'unique' 
+                    }; 
                 }
 
                 return { index: -1, letters: [], type: 'unique' };
@@ -456,15 +436,12 @@
                 });
             },
             
-            // Function to render the word options list
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
                 
-                // Show all words if no matches yet (passcode is empty)
                 const wordsToShow = (matches && matches.length > 0) ? matches : this.CURRENT_DICTIONARY;
                 
-                // Only show a list if we have more than one word, or if the passcode is not started (to show full dictionary)
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
                         const wordElement = document.createElement('span');
@@ -475,29 +452,23 @@
                 }
             },
 
-            // Unified function to handle displaying words and the clue widget
             updateOptionsDisplay(matches) {
-                // Check if passcode is COMPLETE (length 6) and has NO matches
                 if ((!matches || matches.length === 0) && this.PASSCODE.length === 6) {
-                    // Passcode is entered but found nothing: Show NO MATCHES
                     this.MATCHES = [];
                     document.getElementById('options-list').innerHTML = `<span class="option-word" style="background: #ff3b30;">NO MATCHES FOUND</span>`;
                     this.hideDisambiguationUI();
 
                 } else if ((!matches || matches.length === 0) && this.PASSCODE.length < 6) {
-                    // Passcode is incomplete or not started: Show the full dictionary list (per request)
                     this.MATCHES = [];
                     this.updateOptionsList(this.CURRENT_DICTIONARY);
                     this.hideDisambiguationUI();
                     
                 } else if (matches.length === 1) {
-                    // Single match: Show the final word clearly
                     this.MATCHES = matches;
                     document.getElementById('options-list').innerHTML = `<span class="option-word">ID: ${matches[0]}</span>`;
                     this.hideDisambiguationUI();
 
                 } else {
-                    // Multiple matches: Show the filtered list and the disambiguation widget
                     this.MATCHES = matches;
                     this.updateOptionsList(matches);
                     this.showDisambiguationUI(matches);
@@ -509,55 +480,34 @@
                 const disambUI = document.getElementById('disambiguation-ui');
                 const disambContent = document.getElementById('disamb-content');
                 const disambResult = this.getDisambiguationIndex(matches);
-                const { index, letters, type } = disambResult;
+                const { index, letters } = disambResult; 
 
                 disambContent.innerHTML = '';
 
                 if (index === -1) {
-                    // If ambiguous, show the final list with an error note
                     this.updateOptionsList(matches);
                     document.getElementById('options-list').innerHTML += `<span class="option-word" style="background: #ff3b30;">ERROR: AMBIGUOUS</span>`;
-                    disambUI.classList.add('hidden');
+                    this.hideDisambiguationUI();
                     return;
                 }
                 
-                // UPDATED: Changed the header to just "Position X"
+                // Header is set to "Position X"
                 document.getElementById('disamb-header').textContent = `Position ${index}`;
                 disambUI.classList.remove('hidden');
                 disambUI.classList.add('active');
 
 
-                if (type === 'unique') {
-                    const chipContainer = document.createElement('div');
-                    chipContainer.classList.add('chip-container');
-                    letters.forEach(letter => {
-                        const chip = document.createElement('div');
-                        chip.classList.add('letter-chip');
-                        chip.textContent = letter;
-                        chip.addEventListener('click', () => this.handleChipClick(letter, index));
-                        chipContainer.appendChild(chip);
-                    });
-                    disambContent.appendChild(chipContainer);
-                } else {
-                    const fallbackInput = document.createElement('div');
-                    fallbackInput.classList.add('fallback-input');
-                    fallbackInput.innerHTML = `
-                        <span>Type the letter:</span>
-                        <input type="text" id="disamb-input" maxlength="1" autocapitalize="characters" placeholder="L" />
-                    `;
-                    disambContent.appendChild(fallbackInput);
-
-                    const input = document.getElementById('disamb-input');
-                    input.focus();
-                    input.addEventListener('input', (e) => {
-                        const char = e.target.value.toUpperCase();
-                        if (char.length === 1 && char.match(/[A-Z]/)) {
-                            this.handleFallbackInput(char, index);
-                        } else if (char.length === 0) {
-                            document.getElementById('no-match-msg').style.display = 'none';
-                        }
-                    });
-                }
+                // Chip rendering is now the only path
+                const chipContainer = document.createElement('div');
+                chipContainer.classList.add('chip-container');
+                letters.forEach(letter => {
+                    const chip = document.createElement('div');
+                    chip.classList.add('letter-chip');
+                    chip.textContent = letter;
+                    chip.addEventListener('click', () => this.handleChipClick(letter, index));
+                    chipContainer.appendChild(chip);
+                });
+                disambContent.appendChild(chipContainer);
             },
 
             hideDisambiguationUI() {
@@ -569,18 +519,7 @@
             // --- Disambiguation Actions ---
             handleChipClick(letter, index) {
                 const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
-                this.updateOptionsDisplay(filtered); // Calls the new display handler
-            },
-
-            handleFallbackInput(letter, index) {
-                document.getElementById('no-match-msg').style.display = 'none';
-                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
-
-                if (filtered.length === 0) {
-                    document.getElementById('no-match-msg').style.display = 'block';
-                } else {
-                    this.updateOptionsDisplay(filtered); // Calls the new display handler
-                }
+                this.updateOptionsDisplay(filtered); 
             },
 
             // --- Lock/Unlock Flow (Passcode Logic) ---
@@ -604,7 +543,7 @@
                 const homeScreen = document.getElementById('home-screen');
 
                 const matches = this.filterDictionary(this.PASSCODE);
-                this.updateOptionsDisplay(matches); // Use the new display handler
+                this.updateOptionsDisplay(matches); 
                 
                 lockscreen.style.transition = 'opacity 0.5s';
                 lockscreen.style.opacity = '0';
@@ -639,7 +578,6 @@
                     }
                 }
                 
-                // Assign the loaded dictionary to the current dictionary
                 this.CURRENT_DICTIONARY = this.defaultDictionary;
 
                 document.querySelectorAll('.keypad-button').forEach(button => {
@@ -651,7 +589,6 @@
                 this.updateTime();
                 setInterval(() => this.updateTime(), 1000); 
                 
-                // Initialize the list to show all options when the app first loads the home screen
                 this.updateOptionsDisplay(null);
             }
         };
