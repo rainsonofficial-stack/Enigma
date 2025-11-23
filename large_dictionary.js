@@ -373,7 +373,7 @@ const LARGE_DICTIONARY = [
   "solder",
   "soapdish",
   "solarcharger",
-  "soprano recorder",
+  "solarplate",
   "soupbowl",
   "spade",
   "spatula",
