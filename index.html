@@ -130,21 +130,37 @@
             pointer-events: auto;
         }
 
-        /* 🥇 Discreet Reveal Area: Top Right, subtle status style */
+        /* 🥇 Discreet Reveal Area: Lower Right (NEW POSITION) */
         #reveal-area {
             position: absolute;
-            top: 15px;
-            right: 15px; 
-            font-size: 12px; 
-            color: rgba(0, 0, 0, 0.7); 
-            background: rgba(255, 255, 255, 0.8); 
-            padding: 2px 6px;
-            border-radius: 4px;
+            bottom: 30px; /* Moved to the bottom */
+            right: 15px; /* Aligned right */
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.8); 
+            background: rgba(255, 255, 255, 0.7); 
+            padding: 1px 4px;
+            border-radius: 3px;
             z-index: 100;
             pointer-events: none;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 700;
+        }
+
+        /* Status Bar Container */
+        .status-bar {
+            position: absolute; 
+            top: 10px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0 15px; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            font-weight: 600; 
+            z-index: 101;
+            /* Added padding to the right for battery/signal */
+            padding-right: 25px; 
         }
         
         /* Disambiguation Area (Notification/Widget Style) */
@@ -318,6 +334,7 @@
         </div>
 
         <div id="home-screen" class="hidden">
+            
             <div id="reveal-area">NO MATCH</div>
             
             <div id="disambiguation-ui" class="hidden">
@@ -327,8 +344,8 @@
                 <div id="no-match-msg">No word matches that letter. Try another.</div>
             </div>
 
-            <div style="position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; font-size: 15px; font-weight: 600; z-index: 101;">
-                <span id="home-time" style="cursor: pointer;">8:00 AM</span> 
+            <div class="status-bar">
+                <span id="home-time" style="cursor: pointer; user-select: none;">8:00 AM</span> 
                 <span style="display: flex; gap: 5px;">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2zM17 10v4M12 10v4M7 10v4"></path></svg>
@@ -385,25 +402,22 @@
                 wallpaper: null
             },
 
-            // Passcode Decoder & Filter Rules (as per specs)
             LETTER_SHAPES: {
                 1: new Set(['A', 'E', 'F', 'H', 'I', 'K', 'L', 'M', 'N', 'T', 'V', 'W', 'X', 'Y', 'Z']),
                 2: new Set(['B', 'D', 'G', 'J', 'P', 'Q', 'R', 'U']),
                 3: new Set(['C', 'O', 'S'])
             },
 
-            // --- IndexedDB Management (Unchanged - for offline storage) ---
+            // --- IndexedDB Management ---
             openDB() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-
                     request.onupgradeneeded = (event) => {
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
                             db.createObjectStore(this.STORE_NAME);
                         }
                     };
-
                     request.onsuccess = (event) => { resolve(event.target.result); };
                     request.onerror = (event) => { reject(event.target.error); };
                 });
@@ -415,7 +429,6 @@
                     const transaction = db.transaction([this.STORE_NAME], 'readonly');
                     const store = transaction.objectStore(this.STORE_NAME);
                     const request = store.get(this.CONFIG_KEY);
-
                     request.onsuccess = (event) => {
                         const storedConfig = event.target.result;
                         if (storedConfig) {
@@ -444,7 +457,6 @@
                     const transaction = db.transaction([this.STORE_NAME], 'readonly');
                     const store = transaction.objectStore(this.STORE_NAME);
                     const request = store.get('word_list');
-
                     request.onsuccess = (event) => {
                         this.CURRENT_DICTIONARY = event.target.result || this.defaultDictionary;
                         document.getElementById('dict-status').textContent = `Current words: ${this.CURRENT_DICTIONARY.length}`;
@@ -489,7 +501,7 @@
                 return indices;
             },
 
-            // --- The Core Matching Algorithm (Unchanged) ---
+            // --- The Core Matching Algorithm ---
             filterDictionary(passcode, currentMatches = null) {
                 const dictionary = (currentMatches || this.CURRENT_DICTIONARY).map(w => w.toUpperCase());
                 if (dictionary.length === 0) return [];
@@ -498,7 +510,7 @@
                 const lenA = d1;
                 const lenB = d1 + 10;
                 
-                const filtered = dictionary.filter(word => {
+                return dictionary.filter(word => {
                     const length = word.length;
                     
                     // Digit 1: Word Length (d or d+10)
@@ -536,11 +548,9 @@
 
                     return true;
                 });
-
-                return filtered;
             },
 
-            // --- Disambiguation Logic (Unchanged) ---
+            // --- Disambiguation Logic ---
             getDisambiguationIndex(matches) {
                 if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
 
@@ -665,13 +675,14 @@
                 disambUI.classList.remove('active');
             },
             
-            // --- Disambiguation Actions (Unchanged) ---
+            // --- Disambiguation Actions ---
             handleChipClick(letter, index) {
                 const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
                 if (filtered.length === 1) {
                     this.revealWord(filtered[0]);
                 } else {
-                    this.revealWord(`ERROR: ${filtered.length} MATCHES`);
+                    // Re-run disambiguation on the smaller set if multiple matches remain
+                    this.showDisambiguationUI(filtered); 
                 }
             },
 
@@ -688,7 +699,7 @@
                 }
             },
 
-            // --- Lock/Unlock Flow (Unchanged) ---
+            // --- Lock/Unlock Flow ---
             async handlePasscode(digit) {
                 if (digit === 'del') {
                     this.PASSCODE = this.PASSCODE.slice(0, -1);
@@ -714,7 +725,6 @@
                     this.revealWord(this.MATCHES[0]);
                 } else if (this.MATCHES.length > 1) {
                     this.showDisambiguationUI(this.MATCHES);
-                    this.hideDiscreetReveal();
                 } else {
                     this.hideDiscreetReveal();
                 }
@@ -732,24 +742,39 @@
                 this.updatePasscodeDots();
             },
 
-            // --- Settings Logic (Revised for better long-press handling) ---
+            // --- Settings Logic (FIXED LONG PRESS) ---
             setupSettings() {
                 const timeArea = document.getElementById('home-time');
                 const settingsOverlay = document.getElementById('settings-overlay');
-                let pressTimer;
+                let pressTimer = null;
 
-                const startPress = () => {
-                    pressTimer = setTimeout(() => {
+                const openSettings = () => {
+                    if (pressTimer !== null) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
                         settingsOverlay.style.display = 'flex';
-                    }, 3000); // 3 seconds
+                    }
                 };
-                const endPress = () => clearTimeout(pressTimer);
 
-                // Cross-platform long-press detection (Mouse/Touch)
+                const startPress = (e) => {
+                    // Prevent default behavior (like text selection or zoom) on touch devices
+                    if (e.type === 'touchstart') e.preventDefault(); 
+                    
+                    pressTimer = setTimeout(openSettings, 3000); // 3 seconds
+                };
+
+                const endPress = () => {
+                    if (pressTimer !== null) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                };
+
+                // Attach events:
                 timeArea.addEventListener('mousedown', startPress);
                 timeArea.addEventListener('mouseup', endPress);
                 timeArea.addEventListener('mouseleave', endPress);
-                timeArea.addEventListener('touchstart', startPress);
+                timeArea.addEventListener('touchstart', startPress, { passive: false }); // Critical for mobile
                 timeArea.addEventListener('touchend', endPress);
                 timeArea.addEventListener('touchcancel', endPress);
 
