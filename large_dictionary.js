@@ -144,6 +144,7 @@ const LARGE_DICTIONARY = [
   "file",
   "filingcabinet",
   "filter",
+  "firetruck",
   "firstaidkit",
   "flag",
   "flashlight",
