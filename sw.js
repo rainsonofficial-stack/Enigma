@@ -1,4 +1,4 @@
-const CACHE_NAME = 'magician-v2'; // Changed version to force cache update
+const CACHE_NAME = 'magician-v3'; // Changed version to force cache update
 const urlsToCache = [
     '/',
     '/index.html',
