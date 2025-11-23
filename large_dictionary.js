@@ -1,5 +1,6 @@
 const LARGE_DICTIONARY = [
   "airconditioner",
+  "aircooler",
   "airpump",
   "alarmclock",
   "album",
