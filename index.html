@@ -444,7 +444,7 @@
                 });
             },
             
-            // 🔥🔥🔥 MODIFIED FUNCTION FOR CLICKABLE WORDS (Google Search) 🔥🔥🔥
+            // ✅ UPDATED FUNCTION: Uses target="_system" to open in external browser
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -453,25 +453,20 @@
                 
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
-                        const wordLink = document.createElement('a'); // Use <a> tag
+                        const wordLink = document.createElement('a'); 
                         wordLink.classList.add('option-word');
                         wordLink.textContent = word;
                         
-                        // Set attributes for standard browser behavior and new tab/window
                         wordLink.setAttribute('href', `https://www.google.com/search?q=${word}`);
-                        wordLink.setAttribute('target', '_blank');
+                        // Set target="_system" to force external browser on PWAs
+                        wordLink.setAttribute('target', '_system'); 
 
-                        // Add the click event listener to open the search
-                        wordLink.addEventListener('click', (e) => {
-                            e.preventDefault(); 
-                            window.open(`https://www.google.com/search?q=${word}`, '_blank');
-                        });
+                        // Remove event listener as we rely on native <a> tag behavior
                         
                         listContainer.appendChild(wordLink);
                     });
                 }
             },
-            // 🔥🔥🔥 END OF MODIFIED FUNCTION 🔥🔥🔥
 
             updateOptionsDisplay(matches) {
                 if ((!matches || matches.length === 0) && this.PASSCODE.length === 6) {
@@ -486,7 +481,8 @@
                     
                 } else if (matches.length === 1) {
                     this.MATCHES = matches;
-                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="https://www.google.com/search?q=${matches[0]}" target="_blank">ID: ${matches[0]}</a>`;
+                    // ✅ UPDATED: Use target="_system" for single match display
+                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="https://www.google.com/search?q=${matches[0]}" target="_system">ID: ${matches[0]}</a>`;
                     this.hideDisambiguationUI();
 
                 } else {
