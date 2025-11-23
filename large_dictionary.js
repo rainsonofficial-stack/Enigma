@@ -223,7 +223,7 @@ const LARGE_DICTIONARY = [
   "tray",
   "tree",
   "tube",
-  "tv",
+  "television",
   "umbrella",
   "utensil",
   "vacuumcleaner",
