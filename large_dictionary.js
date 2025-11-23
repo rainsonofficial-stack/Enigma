@@ -136,7 +136,7 @@ const LARGE_DICTIONARY = [
   "earphones",
   "earpiece",
   "egg",
-  "eraser,
+  "eraser",
   "extensioncord",
   "eyelet",
   "fan",
