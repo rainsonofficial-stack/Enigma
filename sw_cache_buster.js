@@ -1,5 +1,5 @@
 // New file: sw_cache_buster.js
-// Use a unique name to ensure the browser fetches this new file immediately.
+// Use a unique name to ensure the browser fetches this new file immediately
 const CACHE_BUST_NAME = 'cache-buster-v99'; 
 
 // 1. Install Event: Register the new cache name (though it won't store anything)
