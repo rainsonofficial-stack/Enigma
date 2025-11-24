@@ -548,6 +548,7 @@ const LARGE_DICTIONARY = [
   "serum",
   "sewingneedle",
   "shade",
+  "sharpener",
   "shades",
   "shampoo",
   "sharpener",
