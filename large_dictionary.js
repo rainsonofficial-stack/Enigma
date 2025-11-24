@@ -644,6 +644,8 @@ const LARGE_DICTIONARY = [
   "toaster",
   "toiletbrush",
   "toiletriesbag",
+  "tong",
+  "tongs",
   "toolbox",
   "toothbrush",
   "toothpaste",
