@@ -114,6 +114,7 @@ const LARGE_DICTIONARY = [
   "chain",
   "chainsaw",
   "chair",
+  "chandelier",
   "charger",
   "charm",
   "chessboard",
