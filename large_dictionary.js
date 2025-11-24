@@ -26,6 +26,8 @@ const LARGE_DICTIONARY = [
   "balloon",
   "banana",
   "bandage",
+  "bangle",
+  "bangles",
   "bankbook",
   "barstool",
   "baseball",
