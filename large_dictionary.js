@@ -655,7 +655,6 @@ const LARGE_DICTIONARY = [
   "wallclock",
   "wallet",
   "wardrobe",
-  "warmblanket",
   "washingmachine",
   "watch",
   "waterbottle",
