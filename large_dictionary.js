@@ -8,6 +8,7 @@ const LARGE_DICTIONARY = [
   "alarmclock",
   "album",
   "alcoholbottle",
+  "almirah",
   "ambulance",
   "anvil",
   "apron",
