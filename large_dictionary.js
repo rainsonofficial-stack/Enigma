@@ -113,6 +113,7 @@ const LARGE_DICTIONARY = [
   "chicken",
   "chips",
   "chisel",
+  "christmastree",
   "chocolate",
   "chopstick",
   "chopper",
