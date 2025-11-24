@@ -710,6 +710,7 @@ const LARGE_DICTIONARY = [
   "toolbox",
   "toothbrush",
   "toothpaste",
+  "toothpick",
   "torch",
   "torchlight",
   "towel",
