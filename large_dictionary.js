@@ -402,6 +402,7 @@ const LARGE_DICTIONARY = [
   "onion",
   "orange",
   "oven",
+  "oximeter",
   "packagingbox",
   "padlock",
   "paint",
