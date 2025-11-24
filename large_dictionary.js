@@ -506,6 +506,7 @@ const LARGE_DICTIONARY = [
   "riotshield",
   "rock",
   "rocket",
+  "rocketlauncher",
   "roller",
   "roomheater",
   "rootvegetable",
