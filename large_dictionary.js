@@ -1,4 +1,4 @@
-Const LARGE_DICTIONARY = [
+const LARGE_DICTIONARY = [
   "aeroplane",
   "airconditioner",
   "aircooler",
@@ -660,5 +660,5 @@ Const LARGE_DICTIONARY = [
   "yacht",
   "yardstick",
   "yogamat",
-  "zipper"
+  "zipper",
   ];
