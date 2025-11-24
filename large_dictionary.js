@@ -337,6 +337,7 @@ const LARGE_DICTIONARY = [
   "landline",
   "lantern",
   "laptop",
+  "laptopstand",
   "laundrybasket",
   "leaf",
   "lego",
