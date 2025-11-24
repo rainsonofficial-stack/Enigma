@@ -597,6 +597,7 @@ const LARGE_DICTIONARY = [
   "teapot",
   "teddy",
   "teddybear",
+  "telescope",
   "television",
   "thermometer",
   "thimble",
