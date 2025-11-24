@@ -237,6 +237,7 @@ const LARGE_DICTIONARY = [
   "gluestick",
   "gold",
   "goldfish",
+  "grenade",
   "grinder",
   "guava",
   "guineapig",
