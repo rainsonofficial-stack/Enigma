@@ -189,6 +189,7 @@ const LARGE_DICTIONARY = [
   "earring",
   "earrings",
   "egg",
+  "electrictoothbrush",
   "encyclopaedia",
   "encyclopedia",
   "eraser",
