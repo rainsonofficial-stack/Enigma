@@ -325,6 +325,7 @@ const LARGE_DICTIONARY = [
   "jeans",
   "jet",
   "jewelrybox",
+  "jigsawpuzzle",
   "joggingstroller",
   "joystick",
   "jug",
