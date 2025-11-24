@@ -665,6 +665,7 @@ const LARGE_DICTIONARY = [
   "tub",
   "tube",
   "tumbler",
+  "turkey",
   "tweezer",
   "tyre",
   "UFO",
