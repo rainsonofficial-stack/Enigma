@@ -388,6 +388,7 @@ const LARGE_DICTIONARY = [
   "motorcycle",
   "mouse",
   "mousepad",
+  "mousetrap",
   "mug",
   "muffler",
   "nail",
