@@ -660,5 +660,5 @@ Const LARGE_DICTIONARY = [
   "yacht",
   "yardstick",
   "yogamat",
-  "zipper",
+  "zipper"
   ];
