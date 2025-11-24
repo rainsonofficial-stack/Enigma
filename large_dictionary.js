@@ -601,6 +601,7 @@ const LARGE_DICTIONARY = [
   "tape",
   "tapemeasure",
   "taxi",
+  "tea",
   "teacup",
   "teapot",
   "teddy",
