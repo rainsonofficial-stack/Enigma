@@ -244,6 +244,7 @@ const LARGE_DICTIONARY = [
   "gasstove",
   "gate",
   "gavel",
+  "geyser",
   "gimbal",
   "glass",
   "glasses",
