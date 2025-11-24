@@ -639,6 +639,7 @@ const LARGE_DICTIONARY = [
   "trousers",
   "truck",
   "trunk",
+  "tshirt",
   "tub",
   "tube",
   "tumbler",
