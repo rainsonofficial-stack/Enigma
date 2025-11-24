@@ -708,6 +708,7 @@ const LARGE_DICTIONARY = [
   "watercolour",
   "watercan",
   "waterfall",
+  "waterfilter",
   "wateringcan",
   "watermelon",
   "watertank",
