@@ -260,6 +260,8 @@ const LARGE_DICTIONARY = [
   "handkerchief",
   "hanky",
   "hardhat",
+  "harmonica",
+  "harmonium",
   "hat",
   "headband",
   "headphone",
