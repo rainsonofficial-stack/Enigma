@@ -438,6 +438,8 @@ const LARGE_DICTIONARY = [
   "passport",
   "pavement",
   "peanut",
+  "pebble",
+  "pebbles",
   "pearl",
   "peeler",
   "pen",
