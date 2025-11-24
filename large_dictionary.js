@@ -152,6 +152,7 @@ const LARGE_DICTIONARY = [
   "cuttingboard",
   "cyclehelmet",
   "debitcard",
+  "deer",
   "desk",
   "desktop",
   "detergent",
@@ -683,5 +684,6 @@ const LARGE_DICTIONARY = [
   "yacht",
   "yardstick",
   "yogamat",
+  "zebra",
   "zipper",
   ];
