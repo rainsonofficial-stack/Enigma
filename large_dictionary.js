@@ -311,7 +311,6 @@ const LARGE_DICTIONARY = [
   "key",
   "keychain",
   "keyboard",
-  "kitchentowel",
   "kite",
   "knife",
   "ladder",
