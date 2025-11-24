@@ -351,6 +351,7 @@ const LARGE_DICTIONARY = [
   "monitor",
   "mop",
   "mortar",
+  "mosquitocoil",
   "motorcycle",
   "mouse",
   "mousepad",
