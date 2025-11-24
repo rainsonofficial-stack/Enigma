@@ -11,6 +11,7 @@ const LARGE_DICTIONARY = [
   "almirah",
   "ambulance",
   "anvil",
+  "antenna",
   "apron",
   "apple",
   "aquarium",
