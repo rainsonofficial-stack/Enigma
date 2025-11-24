@@ -132,6 +132,8 @@ const LARGE_DICTIONARY = [
   "coffeegrinder",
   "coffeemaker",
   "coin",
+  "coke",
+  "cocacola",
   "colander",
   "cologne",
   "comb",
