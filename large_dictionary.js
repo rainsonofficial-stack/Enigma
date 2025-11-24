@@ -93,6 +93,8 @@ const LARGE_DICTIONARY = [
   "cap",
   "capsule",
   "car",
+  "carkey",
+  "carkeys",
   "card",
   "cardboard",
   "carpet",
