@@ -109,6 +109,8 @@ const LARGE_DICTIONARY = [
   "cat",
   "ceilingfan",
   "cellphone",
+  "chain",
+  "chainsaw",
   "chair",
   "charger",
   "charm",
