@@ -219,6 +219,7 @@ const LARGE_DICTIONARY = [
   "filingcabinet",
   "filter",
   "fishinghook",
+  "fishingnet",
   "fishingrod",
   "firetruck",
   "fireplace",
