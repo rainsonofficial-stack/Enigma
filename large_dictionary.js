@@ -680,6 +680,7 @@ const LARGE_DICTIONARY = [
   "tie",
   "tile",
   "tiles",
+  "timemachine",
   "tire",
   "tissuebox",
   "toaster",
