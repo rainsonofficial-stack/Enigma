@@ -414,19 +414,19 @@
                 });
             },
 
-            // --- Disambiguation Logic (FIXED: Best-Fit/Max Unique Letters) ---
+            // --- Disambiguation Logic (UPDATED) ---
             getDisambiguationIndex(matches) {
                 if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
 
                 const minLength = Math.min(...matches.map(w => w.length));
-                // Limit search to position 8 or 1 past the shortest word
-                const searchLimit = Math.min(minLength + 1, 8); 
+                // NEW: Cap search at the minimum-length word (no +1), and remove the old 8-letter cap
+                const searchLimit = minLength;
 
                 let bestIndex = -1;
                 let maxUniqueLetters = 1; // Start at 1 (since 0 or 1 unique letter is not helpful)
 
-                // 1. Iterate through all possible positions to find the best one
-                for (let i = 1; i < searchLimit; i++) { 
+                // 1. Iterate through all possible positions (0-based index) up to minLength-1
+                for (let i = 0; i < searchLimit; i++) { 
                     const lettersAtPosition = matches
                         .map(word => word.length > i ? word[i] : null)
                         .filter(l => l !== null);
@@ -440,6 +440,7 @@
                         (lettersAtPosition.length / matches.length > 0.5)) {
                         
                         maxUniqueLetters = uniqueLetters.size;
+                        // Convert 0-based index to 1-based position for UI/display
                         bestIndex = i + 1;
                     }
                 }
