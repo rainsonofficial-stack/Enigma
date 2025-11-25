@@ -32,6 +32,8 @@ const LARGE_DICTIONARY = [
   "bandage",
   "bangle",
   "bangles",
+  "banjo",
+  "banjos",
   "bankbook",
   "barstool",
   "barmagnet",
