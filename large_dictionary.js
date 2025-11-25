@@ -169,6 +169,7 @@ const LARGE_DICTIONARY = [
   "crayons",
   "creditcard",
   "crossbow",
+  "crown",
   "cup",
   "cupboard",
   "cupcake",
