@@ -508,6 +508,7 @@ const LARGE_DICTIONARY = [
   "pearl",
   "peeler",
   "pen",
+  "pendant",
   "pencil",
   "pencilbox",
   "pendrive",
