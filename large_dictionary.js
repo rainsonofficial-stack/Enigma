@@ -564,6 +564,7 @@ const LARGE_DICTIONARY = [
   "saltshaker",
   "sandal",
   "sandals",
+  "satellite",
   "saw",
   "saxophone",
   "seed",
