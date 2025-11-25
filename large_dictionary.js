@@ -395,6 +395,7 @@ const LARGE_DICTIONARY = [
   "lubricant",
   "luggage",
   "lunchbox",
+  "macbook",
   "machinegun",
   "magazine",
   "magnet",
