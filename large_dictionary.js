@@ -459,6 +459,7 @@ const LARGE_DICTIONARY = [
   "padlock",
   "paint",
   "paintbrush",
+  "paintroller",
   "pan",
   "pancake",
   "pancakes",
