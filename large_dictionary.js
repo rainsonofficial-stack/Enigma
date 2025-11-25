@@ -350,6 +350,7 @@ const LARGE_DICTIONARY = [
   "holepuncher",
   "honey",
   "hoodie",
+  "horn",
   "hose",
   "hotdog",
   "hotwaterbottle",
