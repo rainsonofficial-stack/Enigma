@@ -357,6 +357,7 @@ const LARGE_DICTIONARY = [
   "laptopstand",
   "laundrybasket",
   "leaf",
+  "leash",
   "lego",
   "legos",
   "lemon",
