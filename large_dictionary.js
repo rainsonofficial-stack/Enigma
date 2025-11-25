@@ -77,6 +77,8 @@ const LARGE_DICTIONARY = [
   "bow",
   "bowl",
   "box",
+  "boxinggloves",
+  "boxingglove",
   "bra",
   "bracelet",
   "bread",
