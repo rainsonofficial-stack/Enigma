@@ -32,6 +32,7 @@ const LARGE_DICTIONARY = [
   "bangles",
   "bankbook",
   "barstool",
+  "barmagnet",
   "baseball",
   "basin",
   "basket",
