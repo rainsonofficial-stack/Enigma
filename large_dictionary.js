@@ -626,6 +626,7 @@ const LARGE_DICTIONARY = [
   "saw",
   "saxophone",
   "seed",
+  "scale",
   "scarf",
   "scenery",
   "scentedcandle",
