@@ -401,6 +401,8 @@ const LARGE_DICTIONARY = [
   "marker",
   "mask",
   "mascara",
+  "massagechair",
+  "massagesofa",
   "matchbox",
   "matchstick",
   "mattress",
