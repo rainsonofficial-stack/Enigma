@@ -83,7 +83,7 @@ const LARGE_DICTIONARY = [
   "briefcase",
   "broom",
   "brush",
-  "bubble"
+  "bubble",
   "bubbles",
   "bucket",
   "bulb",
