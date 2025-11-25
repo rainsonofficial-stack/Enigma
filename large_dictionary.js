@@ -17,7 +17,7 @@ const LARGE_DICTIONARY = [
   "aquarium",
   "armchair",
   "arrow",
-  "atm"
+  "atm",
   "atmcard",
   "audiorecorder",
   "axe",
