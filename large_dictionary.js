@@ -17,6 +17,7 @@ const LARGE_DICTIONARY = [
   "aquarium",
   "armchair",
   "arrow",
+  "atm"
   "atmcard",
   "audiorecorder",
   "axe",
@@ -341,6 +342,7 @@ const LARGE_DICTIONARY = [
   "icecube",
   "icetray",
   "identitycard",
+  "igloo",
   "incense",
   "incensestick",
   "ink",
@@ -807,6 +809,7 @@ const LARGE_DICTIONARY = [
   "whisk",
   "whistle",
   "whiteboard",
+  "wifiextender",
   "wifirouter",
   "windmill",
   "window",
