@@ -180,6 +180,7 @@ const LARGE_DICTIONARY = [
   "creditcard",
   "crocs",
   "crossbow",
+  "crowbar",
   "crown",
   "cup",
   "cupboard",
