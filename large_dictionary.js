@@ -421,6 +421,9 @@ const LARGE_DICTIONARY = [
   "mobilephone",
   "modelcar",
   "modem",
+  "money",
+  "moneybill",
+  "moneybills"
   "monitor",
   "mop",
   "mortar",
