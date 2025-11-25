@@ -424,7 +424,7 @@ const LARGE_DICTIONARY = [
   "modem",
   "money",
   "moneybill",
-  "moneybills"
+  "moneybills",
   "monitor",
   "mop",
   "mortar",
