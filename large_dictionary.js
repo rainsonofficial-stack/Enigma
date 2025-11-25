@@ -322,6 +322,7 @@ const LARGE_DICTIONARY = [
   "hairclip",
   "hairdryer",
   "hairstraightener",
+  "hairwig",
   "hammer",
   "handbag",
   "handglove",
