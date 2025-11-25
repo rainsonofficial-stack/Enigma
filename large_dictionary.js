@@ -609,6 +609,7 @@ const LARGE_DICTIONARY = [
   "rose",
   "router",
   "rpg",
+  "rubber",
   "rubberband",
   "rubickscube",
   "rubikscube",
