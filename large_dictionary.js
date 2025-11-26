@@ -686,6 +686,7 @@ const LARGE_DICTIONARY = [
   "slate",
   "sled",
   "sledgehammer",
+  "slingshot",
   "slipper",
   "slippers",
   "smartphone",
