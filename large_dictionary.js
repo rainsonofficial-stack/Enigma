@@ -441,6 +441,7 @@ const LARGE_DICTIONARY = [
   "measuringcup",
   "medal",
   "medicine",
+  "melon",
   "memorycard",
   "microwave",
   "microphone",
