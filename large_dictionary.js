@@ -128,6 +128,7 @@ const LARGE_DICTIONARY = [
   "cartridge",
   "cashbox",
   "cat",
+  "catapult",
   "cctv",
   "cctvcamera",
   "ceilingfan",
