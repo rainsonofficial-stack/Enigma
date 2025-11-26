@@ -710,6 +710,7 @@ const LARGE_DICTIONARY = [
   "soupbowl",
   "spade",
   "spaghetti",
+  "sparrow",
   "spatula",
   "speaker",
   "spectacles",
