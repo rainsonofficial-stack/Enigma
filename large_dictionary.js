@@ -327,7 +327,7 @@ const LARGE_DICTIONARY = [
   "guitar",
   "gumball",
   "gun",
-  "gunproof,
+  "gunproof",
   "gunproofvest",
   "hairband",
   "hairclip",
