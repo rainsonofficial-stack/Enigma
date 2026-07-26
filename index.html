@@ -495,14 +495,11 @@
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
                         const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}`;
-                        const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.sec.android.app.sbrowser;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
+                        const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
 
                         const wordLink = document.createElement('a'); 
                         wordLink.classList.add('option-word');
                         wordLink.textContent = word;
-                        
-                        // Real href — let the browser/OS handle the navigation natively,
-                        // no preventDefault()/window.open() interception.
                         wordLink.setAttribute('href', searchUrl);
                         
                         listContainer.appendChild(wordLink);
@@ -526,7 +523,7 @@
                     // Single match — same intent:// href approach, no inline onclick/window.open.
                     const word = matches[0];
                     const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}`;
-                    const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.sec.android.app.sbrowser;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
+                    const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
                     document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="${searchUrl}">ID: ${word}</a>`;
                     this.hideDisambiguationUI();
 
