@@ -479,7 +479,8 @@
                 });
             },
             
-            // Link function remains the same (External Browser Fix)
+            // Link function — now uses intent:// URLs so Android routes the tap
+            // through the OS package resolver instead of an in-app/Custom-Tab view.
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -488,19 +489,15 @@
                 
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
-                        const searchUrl = `https://www.google.com/search?q=${word}`;
+                        const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
 
                         const wordLink = document.createElement('a'); 
                         wordLink.classList.add('option-word');
                         wordLink.textContent = word;
                         
-                        // Set the href for fallback/accessibility
+                        // Real href — let the browser/OS handle the navigation natively,
+                        // no preventDefault()/window.open() interception.
                         wordLink.setAttribute('href', searchUrl);
-                        
-                        // Use a click listener to explicitly force external browser open
-                        wordLink.setAttribute('target', '_blank');
-wordLink.setAttribute('rel', 'noopener noreferrer');
-// no click listener needed — let the browser handle it
                         
                         listContainer.appendChild(wordLink);
                     });
@@ -520,9 +517,10 @@ wordLink.setAttribute('rel', 'noopener noreferrer');
                     
                 } else if (matches.length === 1) {
                     this.MATCHES = matches;
-                    // UPDATED: Use inline onclick and '_system' target for single match display
+                    // Single match — same intent:// href approach, no inline onclick/window.open.
                     const word = matches[0];
-                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" onclick="window.open('https://www.google.com/search?q=${word}', '_system'); return false;" href="#">ID: ${word}</a>`;
+                    const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="${searchUrl}">ID: ${word}</a>`;
                     this.hideDisambiguationUI();
 
                 } else {
@@ -741,3 +739,4 @@ wordLink.setAttribute('rel', 'noopener noreferrer');
     </script>
 </body>
 </html>
+
