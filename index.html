@@ -498,11 +498,9 @@
                         wordLink.setAttribute('href', searchUrl);
                         
                         // Use a click listener to explicitly force external browser open
-                        wordLink.addEventListener('click', (e) => {
-                            e.preventDefault(); 
-                            // The '_system' target is often respected by PWA/Webview environments for external links
-                            window.open(searchUrl, '_system'); 
-                        });
+                        wordLink.setAttribute('target', '_blank');
+wordLink.setAttribute('rel', 'noopener noreferrer');
+// no click listener needed — let the browser handle it
                         
                         listContainer.appendChild(wordLink);
                     });
