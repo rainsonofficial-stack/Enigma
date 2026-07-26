@@ -7,6 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <style>
         /* General Reset & Body */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
         html { 
             height: 100%; /* Fix PWA height bug */
         }
@@ -134,6 +137,8 @@
             cursor: pointer;
             user-select: none;
             transition: background-color 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
         .keypad-button:active {
             background: rgba(255, 255, 255, 0.3);
@@ -489,7 +494,8 @@
                 
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
-                        const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+                        const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}`;
+                        const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.sec.android.app.sbrowser;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
 
                         const wordLink = document.createElement('a'); 
                         wordLink.classList.add('option-word');
@@ -519,7 +525,8 @@
                     this.MATCHES = matches;
                     // Single match — same intent:// href approach, no inline onclick/window.open.
                     const word = matches[0];
-                    const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+                    const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}`;
+                    const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.sec.android.app.sbrowser;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
                     document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="${searchUrl}">ID: ${word}</a>`;
                     this.hideDisambiguationUI();
 
