@@ -7,9 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <style>
         /* General Reset & Body */
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
         html { 
             height: 100%; /* Fix PWA height bug */
         }
@@ -137,8 +134,6 @@
             cursor: pointer;
             user-select: none;
             transition: background-color 0.1s;
-            -webkit-tap-highlight-color: transparent;
-            outline: none;
         }
         .keypad-button:active {
             background: rgba(255, 255, 255, 0.3);
@@ -484,8 +479,7 @@
                 });
             },
             
-            // Link function — now uses intent:// URLs so Android routes the tap
-            // through the OS package resolver instead of an in-app/Custom-Tab view.
+            // Link function remains the same (External Browser Fix)
             updateOptionsList(matches) {
                 const listContainer = document.getElementById('options-list');
                 listContainer.innerHTML = '';
@@ -494,13 +488,21 @@
                 
                 if (wordsToShow.length > 1 || this.PASSCODE.length === 0) {
                      wordsToShow.forEach(word => {
-                        const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}`;
-                        const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
+                        const searchUrl = `https://www.google.com/search?q=${word}`;
 
                         const wordLink = document.createElement('a'); 
                         wordLink.classList.add('option-word');
                         wordLink.textContent = word;
+                        
+                        // Set the href for fallback/accessibility
                         wordLink.setAttribute('href', searchUrl);
+                        
+                        // Use a click listener to explicitly force external browser open
+                        wordLink.addEventListener('click', (e) => {
+                            e.preventDefault(); 
+                            // The '_system' target is often respected by PWA/Webview environments for external links
+                            window.open(searchUrl, '_system'); 
+                        });
                         
                         listContainer.appendChild(wordLink);
                     });
@@ -520,11 +522,9 @@
                     
                 } else if (matches.length === 1) {
                     this.MATCHES = matches;
-                    // Single match — same intent:// href approach, no inline onclick/window.open.
+                    // UPDATED: Use inline onclick and '_system' target for single match display
                     const word = matches[0];
-                    const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}`;
-                    const searchUrl = `intent://www.google.com/search?q=${encodeURIComponent(word)}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" href="${searchUrl}">ID: ${word}</a>`;
+                    document.getElementById('options-list').innerHTML = `<a class="option-word" style="pointer-events: auto;" onclick="window.open('https://www.google.com/search?q=${word}', '_system'); return false;" href="#">ID: ${word}</a>`;
                     this.hideDisambiguationUI();
 
                 } else {
@@ -743,4 +743,3 @@
     </script>
 </body>
 </html>
-
